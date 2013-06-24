@@ -481,8 +481,9 @@ int main(int argc, char **argv) {
 					string relativePath = currentPath.substr(mosyncProjectPath.length(), currentPath.length() - mosyncProjectPath.length());
 					copyCmd += relativePath + "\\" + name + "\"";
 
-					system(("mkdir \"" + outputDirPath + relativePath + "\"").c_str());
-					int r = system(copyCmd.c_str());
+					int r = system(("mkdir \"" + outputDirPath + relativePath + "\"").c_str());
+					// mkdir is allowed to fail if the file already exists.
+					r = system(copyCmd.c_str());
 					if(r) {
 						printf("Command failed: %s %i\n", copyCmd.c_str(), r);
 						exit(r);
