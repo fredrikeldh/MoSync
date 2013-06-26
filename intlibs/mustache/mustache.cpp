@@ -24,7 +24,7 @@ string MustacheParser::parseFile(string filename, ParserCallback* cb) {
 	 ifstream file(filename.c_str(), ios::in|ios::binary|ios::ate);
 	  if (file.is_open())
 	  {
-	    size_t size = file.tellg();
+	    size_t size = (size_t)file.tellg();
 	    char* contents = new char [size + 1];
 	    file.seekg (0, ios::beg);
 	    file.read (contents, size);
@@ -138,7 +138,7 @@ string MustacheParser::parse(const string& input, ParserCallback* cb) {
 
 string MustacheParser::location() {
 	char locationStr[20];
-	sprintf(locationStr, "%06d: ", (int) fPos);
+	sprintf(locationStr, "%06d: ", (int)fPos);
 	return string(locationStr);
 }
 

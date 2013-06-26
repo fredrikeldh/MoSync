@@ -42,6 +42,7 @@ void packageIOS(const SETTINGS& s, const RuntimeInfo& ri) {
 	testVersion(s);
 	testIOSCert(s);
 	testCppOutputDir(s);
+	testOutputType(s);
 
 	std::ostringstream generateCmd;
 	std::ostringstream buildCmd;

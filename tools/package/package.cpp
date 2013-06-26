@@ -334,13 +334,15 @@ void testExtensions(const SETTINGS& s) {
 	// TODO!
 }
 void testOutputType(const SETTINGS& s) {
-	if (s.outputType) {
-		if (strcmp("interpreted", s.outputType) &&
-			strcmp("rebuilt", s.outputType) &&
-			strcmp("native", s.outputType)) {
-			printf("Output type must be either \"interpreted\", \"rebuilt\" or \"native\"!\n");
-			exit(1);
-		}
+	if (!s.outputType) {
+		printf("Must specify output type!\n");
+		exit(1);
+	}
+	if (strcmp("interpreted", s.outputType) &&
+		strcmp("rebuilt", s.outputType) &&
+		strcmp("native", s.outputType)) {
+		printf("Output type must be either \"interpreted\", \"rebuilt\" or \"native\"!\n");
+		exit(1);
 	}
 }
 static void testUid(const char* uid) {

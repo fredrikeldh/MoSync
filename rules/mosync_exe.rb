@@ -247,6 +247,7 @@ class MoSyncPackTask < Task
 			" --android-alias \"#{@o[:androidAlias]}\""+
 			" --android-keypass \"#{@o[:androidKeypass]}\""+
 			" --show-passwords"+
+			" --output-type interpreted"+
 			@o[:extraParameters].to_s
 		FileUtils.cd(@o[:tempdir], :verbose => true) do
 			sh cmd
