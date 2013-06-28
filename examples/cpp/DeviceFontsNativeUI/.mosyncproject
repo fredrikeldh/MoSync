@@ -1,31 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project supports-build-configs="true" version="1.2">
+<project supports-build-configs="true" version="1.8">
 <build.cfg id="Debug" types="Debug"/>
 <build.cfg id="Release" types="Release"/>
+<criteria>
+<filter type="com.mobilesorcery.sdk.capabilities.devices.elementfactory">
+<capabilities optional="" required="File\ Storage Internet\ Access"/>
+</filter>
+</criteria>
 <properties>
+<property key="build.prefs:additional.include.paths" value="%mosync-home%/include"/>
+<property key="build.prefs:additional.include.paths.native/Debug" value=""/>
+<property key="build.prefs:additional.include.paths.native/Release" value=""/>
 <property key="build.prefs:additional.include.paths/Debug" value=""/>
 <property key="build.prefs:additional.include.paths/Release" value=""/>
-<property key="build.prefs:additional.libraries" value="MAUtil.lib"/>
-<property key="build.prefs:additional.libraries/Debug" value="MAUtilD.lib, nativeui.lib"/>
-<property key="build.prefs:additional.libraries/Release" value="MAUtil.lib,nativeui.lib"/>
+<property key="build.prefs:additional.libraries" value="mastd.lib, MAUtil.lib"/>
+<property key="build.prefs:additional.libraries/Debug" value="MAUtil.lib, nativeui.lib"/>
+<property key="build.prefs:additional.libraries/Release" value="MAUtil.lib, nativeui.lib"/>
+<property key="build.prefs:additional.library.paths" value="%mosync-home%/lib/mapip2_release_4.6.3"/>
 <property key="build.prefs:additional.library.paths/Debug" value=""/>
 <property key="build.prefs:additional.library.paths/Release" value=""/>
+<property key="build.prefs:app.permissions" value="File\ Storage Internet\ Access Vibration"/>
 <property key="build.prefs:extra.link.sw/Debug" value=""/>
 <property key="build.prefs:extra.link.sw/Release" value=""/>
 <property key="build.prefs:extra.res.sw/Debug" value=""/>
 <property key="build.prefs:extra.res.sw/Release" value=""/>
-<property key="build.prefs:gcc.warnings/Debug" value="0"/>
-<property key="build.prefs:gcc.warnings/Release" value="0"/>
+<property key="build.prefs:gcc.switches/Debug" value=""/>
+<property key="build.prefs:gcc.switches/Release" value="-O2 -fomit-frame-pointer"/>
+<property key="build.prefs:gcc.warnings/Debug" value="30"/>
+<property key="build.prefs:gcc.warnings/Release" value="30"/>
+<property key="build.prefs:ignore.default.include.paths" value="true"/>
+<property key="build.prefs:ignore.default.include.paths/Debug" value="false"/>
+<property key="build.prefs:ignore.default.include.paths/Release" value="false"/>
+<property key="build.prefs:ignore.default.libraries" value="true"/>
+<property key="build.prefs:ignore.default.libraries/Debug" value="false"/>
+<property key="build.prefs:ignore.default.libraries/Release" value="false"/>
+<property key="build.prefs:ignore.default.library.paths" value="true"/>
+<property key="build.prefs:ignore.default.library.paths/Debug" value="false"/>
+<property key="build.prefs:ignore.default.library.paths/Release" value="false"/>
 <property key="build.prefs:memory.data/Debug" value="512"/>
 <property key="build.prefs:memory.data/Release" value="512"/>
 <property key="build.prefs:memory.heap/Debug" value="256"/>
 <property key="build.prefs:memory.heap/Release" value="256"/>
 <property key="build.prefs:memory.stack/Debug" value="128"/>
 <property key="build.prefs:memory.stack/Release" value="128"/>
+<property key="build.prefs:output.static.recompilation" value="interpreted"/>
 <property key="build.prefs:project.type" value=""/>
 <property key="dependency.strategy" value="0"/>
 <property key="excludes/Debug" value=""/>
 <property key="excludes/Release" value=""/>
+<property key="profile.mgr.type" value="0"/>
 <property key="template.id" value="project.nativeui"/>
 </properties>
 </project>

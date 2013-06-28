@@ -25,7 +25,7 @@ MA 02110-1301, USA.
 #include "../STLMoblet.h"
 #include "../LOG.h"
 
-bool SomeUnaryPredToTestRemove(int val)
+static bool SomeUnaryPredToTestRemove(int val)
 {
 	return (val==10);
 }

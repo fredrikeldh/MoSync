@@ -37,7 +37,7 @@ private:
 	int mNServices;
 
 	bool readDevice(DataHandler& data, DEVICE& dev);
-	int Database::calculateDatabaseSize() const;
+	int calculateDatabaseSize() const;
 	void writeDevice(DataHandler& data, const DEVICE& dev) const;
 public:
 	Database() : mNServices(0) {}

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project supports-build-configs="true" version="1.5">
+<project supports-build-configs="true" version="1.8">
 <build.cfg id="Debug" types="Debug"/>
 <build.cfg id="Release" types="Release"/>
 <criteria>
@@ -8,32 +8,45 @@
 </filter>
 </criteria>
 <properties>
-<property key="build.prefs:additional.include.paths/Debug" value="%mosync-home%/include/newlib/stlport/, %mosync-home%/include/newlib/"/>
-<property key="build.prefs:additional.include.paths/Release" value="%mosync-home%/include/newlib/stlport/, %mosync-home%/include/newlib/"/>
-<property key="build.prefs:additional.libraries/Debug" value="newlib.lib, stlport.lib, MAUtil.lib, MoGraph.lib"/>
-<property key="build.prefs:additional.libraries/Release" value="newlib.lib, stlport.lib, MAUtil.lib, MoGraph.lib"/>
-<property key="build.prefs:additional.library.paths/Debug" value="%mosync-home%/lib/newlib_debug/"/>
-<property key="build.prefs:additional.library.paths/Release" value="%mosync-home%/lib/newlib_release/"/>
+<property key="build.prefs:additional.include.paths" value="%mosync-home%/include"/>
+<property key="build.prefs:additional.include.paths.native/Debug" value=""/>
+<property key="build.prefs:additional.include.paths.native/Release" value=""/>
+<property key="build.prefs:additional.include.paths/Debug" value=""/>
+<property key="build.prefs:additional.include.paths/Release" value=""/>
+<property key="build.prefs:additional.libraries" value="mastd.lib"/>
+<property key="build.prefs:additional.libraries/Debug" value="MAUtil.lib, MoGraph.lib"/>
+<property key="build.prefs:additional.libraries/Release" value="MAUtil.lib, MoGraph.lib"/>
+<property key="build.prefs:additional.library.paths" value="%mosync-home%/lib/mapip2_release_4.6.3"/>
+<property key="build.prefs:additional.library.paths/Debug" value=""/>
+<property key="build.prefs:additional.library.paths/Release" value=""/>
 <property key="build.prefs:app.permissions" value="File\ Storage Internet\ Access Vibration"/>
 <property key="build.prefs:extra.link.sw/Debug" value=""/>
 <property key="build.prefs:extra.link.sw/Release" value=""/>
 <property key="build.prefs:extra.res.sw/Debug" value=""/>
 <property key="build.prefs:extra.res.sw/Release" value=""/>
-<property key="build.prefs:gcc.warnings/Debug" value="10"/>
-<property key="build.prefs:gcc.warnings/Release" value="10"/>
-<property key="build.prefs:ignore.default.include.paths/Debug" value="true"/>
-<property key="build.prefs:ignore.default.include.paths/Release" value="true"/>
-<property key="build.prefs:ignore.default.libraries/Debug" value="true"/>
-<property key="build.prefs:ignore.default.libraries/Release" value="true"/>
-<property key="build.prefs:ignore.default.library.paths/Debug" value="true"/>
-<property key="build.prefs:ignore.default.library.paths/Release" value="true"/>
+<property key="build.prefs:gcc.switches/Debug" value="-Wno-float-equal -Wno-unreachable-code -Wno-shadow -Wno-missing-noreturn -Wno-vla"/>
+<property key="build.prefs:gcc.switches/Release" value="-Wno-float-equal -Wno-unreachable-code -Wno-shadow -Wno-missing-noreturn -Wno-vla -O2 -fomit-frame-pointer"/>
+<property key="build.prefs:gcc.warnings/Debug" value="30"/>
+<property key="build.prefs:gcc.warnings/Release" value="30"/>
+<property key="build.prefs:ignore.default.include.paths" value="true"/>
+<property key="build.prefs:ignore.default.include.paths/Debug" value="false"/>
+<property key="build.prefs:ignore.default.include.paths/Release" value="false"/>
+<property key="build.prefs:ignore.default.libraries" value="true"/>
+<property key="build.prefs:ignore.default.libraries/Debug" value="false"/>
+<property key="build.prefs:ignore.default.libraries/Release" value="false"/>
+<property key="build.prefs:ignore.default.library.paths" value="true"/>
+<property key="build.prefs:ignore.default.library.paths/Debug" value="false"/>
+<property key="build.prefs:ignore.default.library.paths/Release" value="false"/>
 <property key="build.prefs:memory.data/Debug" value="4096"/>
 <property key="build.prefs:memory.data/Release" value="2048"/>
 <property key="build.prefs:memory.heap/Debug" value="3500"/>
 <property key="build.prefs:memory.heap/Release" value="1728"/>
 <property key="build.prefs:memory.stack/Debug" value="256"/>
 <property key="build.prefs:memory.stack/Release" value="128"/>
-<property key="build.prefs:project.type" value=""/>
+<property key="build.prefs:output.static.recompilation" value="interpreted"/>
+<property key="build.prefs:project.type" value="app"/>
+<property key="build.prefs:standard.libraries/Debug" value="stl"/>
+<property key="build.prefs:standard.libraries/Release" value="stl"/>
 <property key="dependency.strategy" value="0"/>
 <property key="excludes/Debug" value=""/>
 <property key="excludes/Release" value=""/>

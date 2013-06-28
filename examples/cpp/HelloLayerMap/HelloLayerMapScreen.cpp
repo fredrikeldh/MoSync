@@ -406,7 +406,7 @@ namespace HelloLayerMap
 	//-------------------------------------------------------------------------
 	{
 		int curTimeMs = maGetMilliSecondCount( );
-		int deltaMs = curTimeMs - lastPointerMoveMs;
+		//int deltaMs = curTimeMs - lastPointerMoveMs;
 		lastPointerMoveMs = curTimeMs;
 		int dx = ( p.x - pointerPressX ) * TapPanAcceleration;
 		int dy = ( p.y - pointerPressY ) * TapPanAcceleration;

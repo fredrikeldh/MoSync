@@ -75,7 +75,7 @@ extern "C" {
 	/**
 	* Init the matrix character characters array.
 	*/
-	void initChars() {
+	static void initChars() {
 		MAExtent e = maGetScrSize();
 		tileMapSizeX = EXTENT_X(e)/16;
 		tileMapSizeY = EXTENT_Y(e)/16;
@@ -96,14 +96,14 @@ extern "C" {
 		nextDrop = maGetMilliSecondCount();
 	}
 
-	void deleteChars() {
+	static void deleteChars() {
 		delete characters;
 	}
 
 	/**
 	* Recalculate intensities and update characters.
 	*/
-	void drawChars() {
+	static void drawChars() {
 
 		int time = maGetMilliSecondCount();
 
