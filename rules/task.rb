@@ -478,7 +478,7 @@ class CopyDirWork < Work
 	end
 	def glob(dst, src)
 		@prerequisites << DirTask.new(self, dst)
-		sources = Dir["#{src}/*"]
+		sources = Dir.glob("#{src}/*", File::FNM_DOTMATCH) - ["#{src}/.", "#{src}/.."]
 		sources.each do |s|
 			if(File.directory?(s))
 				glob("#{dst}/#{File.basename(s)}", s) if(@copySubdirs)
