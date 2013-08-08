@@ -22,6 +22,7 @@ def default(constant, value)
 	eval(s)
 end
 
+# Unlike Module.const_set, this sets a global constant.
 def set_const(name, value)
 	s = "#{name.to_s} = #{value.inspect}"
 	eval(s)
@@ -84,11 +85,12 @@ end
 def sh(cmd)
 	# Print the command to stdout.
 	puts cmd
-	if(HOST == :win32)
+	if(true)#HOST == :win32)
 		success = system(cmd)
 		error "Command failed" unless(success)
 	else
 		# Open a process.
+		#IO::popen(cmd + " 2>&1") do |io|
 		IO::popen(cmd) do |io|
 			# Pipe the process's output to our stdout.
 			while !io.eof?
@@ -106,13 +108,8 @@ end
 
 class Object
 	def need(*args)
-		vars = instance_variables.inject({}) { |h,var| h[var.to_sym] = true; h }
-		#puts instance_variables
-		#puts vars.inspect
 		args.each do |var|
-			var = var.to_sym
-			#puts "#{var}: #{vars[var].inspect}"
-			if(!vars[var])
+			if(instance_variable_get(var) == nil)
 				raise "Undefined variable: #{var}"
 			end
 		end
@@ -145,9 +142,12 @@ HashMergeAdd = Proc.new {|key, old, new| old + new }
 
 # returns a command-line string with the correct invocation of sed for all platforms
 def sed(script)
-	file = open("|sed --version 2>&1")
-	if((file.gets.beginsWith('GNU sed') && HOST != :win32) ||
-		HOST == :darwin)
+	if(!self.class.class_variable_defined?(:@@sedIsGnu))
+		open("|sed --version 2>&1") do |file|
+			@@sedIsGnu = file.gets.beginsWith('GNU sed')
+		end
+	end
+	if((@@sedIsGnu && HOST != :win32) || HOST == :darwin)
 		return "sed '#{script}'"
 	else
 		return "sed #{script}"
@@ -225,4 +225,45 @@ end
 
 def max(a, b)
 	return (a > b) ? a : b
+end
+
+def aprint(a)
+	print "["
+	first = true
+	a.each do |item|
+		if(first) then
+			first = false
+		else
+			print ", "
+		end
+		print item
+	end
+	print "]\n"
+end
+
+def number_of_processors
+  if HOST == :linux
+    return `cat /proc/cpuinfo | grep processor | wc -l`.to_i
+  elsif HOST == :darwin
+    return `sysctl -n hw.logicalcpu`.to_i
+  elsif HOST == :win32
+    # this works for windows 2000 or greater
+    require 'win32ole'
+    wmi = WIN32OLE.connect("winmgmts://")
+    wmi.ExecQuery("select * from Win32_ComputerSystem").each do |system|
+      return system.NumberOfLogicalProcessors
+    end
+  end
+  raise "can't determine 'number_of_processors' for '#{HOST}'"
+end
+
+def startWebBrowser(url)
+	if(RUBY_PLATFORM =~ /mingw32/)
+		system "start #{url}"
+	elsif(RUBY_PLATFORM =~ /linux/)
+		system "x-www-browser #{url}"
+	else
+		puts url
+		puts "Unsupported platform; start the browser yourself."
+	end
 end

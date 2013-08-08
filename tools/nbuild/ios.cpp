@@ -27,7 +27,7 @@ int compileIOSUserCode(Arguments* params) {
 	//that already exist in the iphone SDK
 	string nativeHeaderDir = string(mosyncdir()) + "/include/MAStdNative";
 
-	typedef vector<string>::const_iterator vctrStrCIter;
+	//typedef vector<string>::const_iterator vctrStrCIter;
 
 	//Gather the source files in a string
 	vector<string> sourceFiles = getSourceFiles(params);

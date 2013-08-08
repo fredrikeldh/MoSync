@@ -1,10 +1,8 @@
 #!/usr/bin/ruby
 
-require File.expand_path('../../rules/exe.rb')
-require File.expand_path('../../rules/targets.rb')
+require File.expand_path('../../rules/cExe.rb')
 
-work = ExeWork.new
-work.instance_eval do 
+WORK = ExeWork.new do
 	@SOURCES = ["."]
 	@EXTRA_INCLUDES = ["../../intlibs"]
 	@LOCAL_LIBS = ["idl-common", "filelist"]
@@ -13,28 +11,26 @@ work.instance_eval do
 end
 
 target :default do
-	work.invoke
 end
 
-# let's pick an early target, for great speed.
-ct = FileTask.new(work, "Output/invoke_syscall_cpp.h")
-ct.instance_eval do
-	def setup
-		@prerequisites = [DirTask.new(@work, '../../runtimes/java/Shared/generated')]
-		@prerequisites += [@work.target] + (["extensions.h", "maapi_defs.h"] + Dir["*.idl", "**/*.idl"]).collect { |f|
-			FileTask.new(@work, f)
-		}
+class CompileTask < FileTask
+	def initialize
+		@prerequisites = [DirTask.new('../../runtimes/java/Shared/generated')]
+		@prerequisites += [WORK] + (["extensions.h", "maapi_defs.h"] + Dir["*.idl", "**/*.idl"]).collect do |f|
+			FileTask.new(f)
+		end
+		# let's pick an early target, for max speed.
+		super("Output/invoke_syscall_cpp.h")
 	end
-	
-	def execute
-		sh @work.target
+	def fileExecute
+		sh WORK.to_s
 	end
 end
 
 target :compile => :default do
 	begin
-		ct.setup
-		ct.invoke
+		ct = CompileTask.new
+		Works.run(false)
 	rescue => e
 		# if the compiler should fail, we must make sure it runs next time.
 		FileUtils.rm_f(ct.to_str)
@@ -48,4 +44,4 @@ target :clean do
 	#TODO: remove all copied files
 end
 
-Targets.invoke
+Works.run

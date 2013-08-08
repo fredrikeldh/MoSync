@@ -1,13 +1,12 @@
 #!/usr/bin/ruby
 
-require File.expand_path('../../rules/native_lib.rb')
+require File.expand_path('../../rules/cLib.rb')
 
-work = NativeLibWork.new
-work.instance_eval do 
+LibWork.new do
 	@SOURCES = ["."]
-	
+
 	@EXTRA_CFLAGS = " -DHAVE_STDLIB_H -DHAVE_STRING_H";
-	
+
 	@SPECIFIC_CFLAGS = {
 		"cp-demangle.c" => " -Wno-shadow -Wno-unreachable-code -Wno-inline"
 	}
@@ -15,4 +14,4 @@ work.instance_eval do
 	@NAME = "demangle"
 end
 
-work.invoke
+Works.run

@@ -1,26 +1,24 @@
 #!/usr/bin/ruby
 
-require File.expand_path('../../rules/native_lib.rb')
+require File.expand_path('../../rules/cLib.rb')
 
-work = NativeLibWork.new
-work.instance_eval do
-	@SOURCES = []
+LibWork.new do
 	if(HOST == :win32)
-		@EXTRA_SOURCEFILES = ["filelist-win32.c"]
+		@SOURCE_FILES = ["filelist-win32.c"]
 	elsif(HOST == :linux)
-		@EXTRA_SOURCEFILES = ["filelist-linux.c"]
-		if(CONFIG == "")
+		@SOURCE_FILES = ["filelist-linux.c"]
+		if(CONFIG == 'release')
 			# bug in /usr/include/bits/stdlib.h
 			@EXTRA_CFLAGS = " -Wno-unreachable-code"
 		end
 	elsif(HOST == :darwin)
-		@EXTRA_SOURCEFILES = ["filelist-linux.c"]
+		@SOURCE_FILES = ["filelist-linux.c"]
 	else
 		error "Unsupported platform"
 	end
-	@EXTRA_SOURCEFILES << 'copyfiles.cpp'
+	@SOURCE_FILES << 'copyfiles.cpp'
 	@EXTRA_INCLUDES = [".."]
 	@NAME = "filelist"
 end
 
-work.invoke
+Works.run

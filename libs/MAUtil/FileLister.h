@@ -23,7 +23,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #ifndef FILELISTER_H
 #define FILELISTER_H
 
-#include <MAUtil/String.h>
+#include "String.h"
 #include <maapi.h>
 
 /**

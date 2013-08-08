@@ -2,19 +2,16 @@
 
 require File.expand_path('../../rules/mosync_lib.rb')
 
-mod = Module.new
-mod.class_eval do
-	def setup_pipe
-		@SOURCES = ['.', 'src']
-		@SOURCES << 'src/stdlib' if(!HAVE_LIBC)
+MoSyncLib.new do
+	@SOURCES = ['.', 'src']
+	@SOURCES << 'src/stdlib' if(!HAVE_LIBC)
 
-		@HEADER_DIRS = ['.', 'src/api']
-		@EXTRA_INCLUDES = ['src/stdlib'] if(!HAVE_LIBC)
-		@EXTRA_CFLAGS = ' -Wno-float-equal -Wno-unreachable-code'
+	@HEADER_DIRS = ['.', 'src/api']
+	@EXTRA_INCLUDES = ['src/stdlib'] if(!HAVE_LIBC)
+	@EXTRA_CFLAGS = ' -Wno-float-equal -Wno-unreachable-code -Wno-c++-compat'
 
-		@INSTALL_INCDIR = 'yajl'
-		@NAME = 'yajl'
-	end
+	@HEADER_INSTALLDIR = 'yajl'
+	@NAME = 'yajl'
 end
 
-MoSyncLib.invoke(mod)
+Works.run

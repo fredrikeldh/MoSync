@@ -3,8 +3,17 @@
 require File.expand_path('../../rules/native_mosync.rb')
 require File.expand_path('../../rules/mosync_util.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+class ProtoTask < FileTask
+	def initialize
+		@prerequisites = Dir['*.c'].collect do |fn| FileTask.new(fn); end
+		super('PBProto.h')
+	end
+	def fileExecute
+		sh "#{WORK.cb}protobuild"
+	end
+end
+
+WORK = MoSyncExe.new do
 	@SOURCES = ["."]
 	@IGNORED_FILES = ["Emu.c", "BrewRebuild.c", "Peeper.c", "JavaCodeGen.c", "disas.c"]
 
@@ -16,21 +25,11 @@ work.instance_eval do
 	@LIBRARIES = ["z"]
 	@NAME = "pipe-tool"
 	@INSTALLDIR = mosyncdir + '/bin'
-	
-	setup
-	
-	so = @all_sourcefiles
-	cb = @COMMON_BUILDDIR
-	protoTask = FileTask.new(self, "PBProto.h")
-	protoTask.instance_eval do
-		@prerequisites = so
-		@COMMON_BUILDDIR = cb
-		def execute
-			puts @COMMON_BUILDDIR
-			sh "#{@COMMON_BUILDDIR}protobuild"
-		end
+	@REQUIREMENTS = [ProtoTask.new]
+
+	def cb
+		@COMMON_BUILDDIR
 	end
-	@prerequisites = [protoTask] + @prerequisites
 end
 
-work.invoke
+Works.run

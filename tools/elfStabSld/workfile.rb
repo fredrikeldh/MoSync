@@ -7,8 +7,7 @@ require 'stringio'
 require './stabdefs.rb'
 
 class GenStabDefsH < MemoryGeneratedFileTask
-	def initialize(work)
-		super(work, 'build/stabdefs.h')
+	def initialize()
 		io = StringIO.new
 		first = true
 		io.puts 'const char* stabName(unsigned char type);'
@@ -23,12 +22,13 @@ class GenStabDefsH < MemoryGeneratedFileTask
 			io.puts "#define #{s.name} #{s.type}"
 		end
 		@buf = io.string
+		@prerequisites = [DirTask.new('build')]
+		super('build/stabdefs.h')
 	end
 end
 
 class GenStabDefsC < MemoryGeneratedFileTask
-	def initialize(work)
-		super(work, 'build/stabdefs.cpp')
+	def initialize()
 		io = StringIO.new
 		first = true
 		io.puts '#include "stabdefs.h"'
@@ -44,31 +44,34 @@ class GenStabDefsC < MemoryGeneratedFileTask
 		io.puts "\t}"
 		io.puts '}'
 		@buf = io.string
+		@prerequisites = [DirTask.new('build')]
+		super('build/stabdefs.cpp')
 	end
 end
 
-GEN_REGNAMES = FileTask.new(nil, 'build/gen-regnames.h')
-GEN_REGNAMES.instance_eval do
-	@gen = '../../runtimes/cpp/core/gen-opcodes.rb'
-	@prerequisites << FileTask.new(nil, @gen)
-	def execute
+class GenRegnamesTask < FileTask
+	def initialize
+		@gen = '../../runtimes/cpp/core/gen-opcodes.rb'
+		@prerequisites = [FileTask.new(@gen)]
+		super('build/gen-regnames.h')
+	end
+	def fileExecute
 		sh "ruby #{@gen} regnames #{@NAME}"
 	end
 end
 
-work = MoSyncExe.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['.']
-	@EXTRA_SOURCEFILES = [
+	@SOURCE_FILES = [
 		'../../runtimes/cpp/platforms/sdl/FileImpl.cpp',
 		'../../runtimes/cpp/base/FileStream.cpp',
 	]
-	@PREREQUISITES = [
-		GenStabDefsH.new(self),
-		GEN_REGNAMES,
+	@REQUIREMENTS = [
+		GenStabDefsH.new,
+		GenRegnamesTask.new,
 	]
-	@EXTRA_SOURCETASKS = [
-		GenStabDefsC.new(self),
+	@SOURCE_TASKS = [
+		GenStabDefsC.new,
 	]
 	@EXTRA_INCLUDES = [
 		'../../intlibs',
@@ -85,4 +88,4 @@ work.instance_eval do
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-work.invoke
+Works.run

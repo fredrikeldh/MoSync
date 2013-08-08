@@ -1,12 +1,11 @@
 #!/usr/bin/ruby
 
-require File.expand_path('../../../../rules/native_lib.rb')
+require File.expand_path('../../../../rules/cLib.rb')
 
-work = NativeLibWork.new
-work.instance_eval do 
+LibWork.new do
 	@SOURCES = ["."]
 	@EXTRA_INCLUDES = ["../../.."]
 	@NAME = "mosync_log_file"
 end
 
-work.invoke
+Works.run

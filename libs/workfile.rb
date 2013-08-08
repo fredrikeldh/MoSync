@@ -1,29 +1,27 @@
 #!/usr/bin/ruby
 
-require File.expand_path('../rules/task.rb')
-require File.expand_path('../rules/targets.rb')
+require File.expand_path('../rules/mosync.rb')
+require File.expand_path('../rules/subdir.rb')
 
 target :pipe do
-	Work.invoke_subdirs(SUBDIRS, 'pipe')
+	Works.invoke_subdirs(SUBDIRS, 'pipe')
 end
 
 target :native do
-	Work.invoke_subdirs(SUBDIRS, 'native')
+	Works.invoke_subdirs(SUBDIRS, 'native')
 end
 
 target :arm do
-	Work.invoke_subdirs(SUBDIRS, 'arm')
+	Works.invoke_subdirs(SUBDIRS, 'arm')
 end
 
 target :default do
-	Work.invoke_subdirs(SUBDIRS)
+	Works.invoke_subdirs(SUBDIRS)
 end
 
 target :clean do
-	Work.invoke_subdirs(SUBDIRS, 'clean')
+	Works.invoke_subdirs(SUBDIRS, 'clean')
 end
-
-Targets.setup
 
 if(USE_NEWLIB)
 	stdlibs = ["newlib", "stlport"]
@@ -39,7 +37,7 @@ if(HAVE_LIBC)
 end
 
 if(MOSYNC_NATIVE)
-	CopyDirWork.new(mosyncdir + "/include/glm", 'glm').invoke()
+	CopyDirTask.new(mosyncdir + "/include/glm", 'glm')
 end
 
-Targets.invoke
+Works.run

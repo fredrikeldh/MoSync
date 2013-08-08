@@ -16,26 +16,15 @@
 
 require "#{File.dirname(__FILE__)}/config.rb"
 
+class WorkError < Exception
+end
+
 def error(msg)
-	puts "Error: #{msg}"
-	exit(1) if(EXIT_ON_ERROR)
+	puts msg
+	raise WorkError.new(msg) if(EXIT_ON_ERROR)
 	raise msg
 end
 
 def warning(msg)
 	puts "#{msg}"
-end
-
-def aprint(a)
-	print "["
-	first = true
-	a.each do |item|
-		if(first) then
-			first = false
-		else
-			print ", "
-		end
-		print item
-	end
-	print "]\n"
 end

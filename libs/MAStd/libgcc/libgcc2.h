@@ -35,12 +35,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define GCC_LIBGCC2_H
 
 /**
- * The MOSYNC_USE_LIBGCC define activates the 64 bits 
- * emulation functions prefixed by 'L_' and removes certain 
+ * The MOSYNC_USE_LIBGCC define activates the 64 bits
+ * emulation functions prefixed by 'L_' and removes certain
  * features of libgcc that is not compatible with mosync.
  */
 #ifdef MOSYNC_USE_LIBGCC
-#include <maapi.h>
+#include "maapi.h"
 
 /* These values are defined in mapip.h and must be changed if mapip.h is changed */
 #define WORDS_BIG_ENDIAN 0
@@ -53,7 +53,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /**
  * Below is a list of 64 bit emulation functions that are activated.
  */
- 
+
 /* Arithmetic functions */
 #define L_ashldi3
 #define L_ashrdi3
@@ -112,7 +112,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    to avoid using regular C language type names in this part of the file
    because the sizes for those types can be configured to be anything.
    Instead we use the following special type names.  */
-   
+
 typedef		 int QItype	__attribute__ ((mode (QI)));
 typedef unsigned int UQItype	__attribute__ ((mode (QI)));
 typedef		 int HItype	__attribute__ ((mode (HI)));

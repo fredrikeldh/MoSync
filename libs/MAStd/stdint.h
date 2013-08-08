@@ -191,7 +191,7 @@
 #define STDINT_H
 
 //#include <stddef.h>
-#include <limits.h>
+#include "limits.h"
 //#include <signal.h>
 
 #if defined (MOSYNC_NATIVE) && defined(__ANDROID__)

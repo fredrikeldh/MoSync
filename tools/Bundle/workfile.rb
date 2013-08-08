@@ -2,17 +2,15 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ["."]
 	@LOCAL_LIBS = ["filelist"]
 	if ( HOST == :darwin )
 		# Objective-C++ compiler
-		@EXTRA_CPPFLAGS = " -Wno-shadow -Wno-missing-prototypes"	
+		@EXTRA_CPPFLAGS = " -Wno-shadow -Wno-missing-prototypes"
 	end
 	@NAME = "Bundle"
-	@TARGETDIR = "."
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-work.invoke
+Works.run

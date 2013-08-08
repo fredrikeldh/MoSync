@@ -1,12 +1,11 @@
 #!/usr/bin/ruby
 
-require File.expand_path("../../rules/native_lib.rb")
+require File.expand_path("../../rules/cLib.rb")
 
-work = NativeLibWork.new
-work.instance_eval do
+LibWork.new do
 	@SOURCES = ['.']
 	@NAME = 'sqlite'
-	@EXTRA_CFLAGS = ' -D_LIB -Wno-float-equal -Wno-error'
+	@EXTRA_CFLAGS = ' -D_LIB -Wno-float-equal -Wno-error -w -Wno-c++-compat'
 end
 
-work.invoke
+Works.run

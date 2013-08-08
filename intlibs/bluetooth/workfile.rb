@@ -2,20 +2,15 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = NativeMoSyncLib.new
-work.instance_eval do
-	set_defaults
-	
+NativeMoSyncLib.new do
 	if(HOST == :linux)
-	
 		@SOURCES = [".", "linux", "linux/bluez"]
 		if(BLUETOOTH)
 			@EXTRA_CPPFLAGS = " -DBLUEZ_SUPPORTED"
 		else
 			#error "libbluetooth-dev missing!"
-		end	
-		
-		
+		end
+
 		@EXTRA_INCLUDES = ["../../runtimes/cpp/base", "../../runtimes/cpp/platforms/sdl"]
 		@SPECIFIC_CFLAGS = { "interface.cpp" => " -Wno-missing-noreturn", "discovery.cpp" => " -Wno-missing-noreturn" }
 	elsif(HOST == :win32)
@@ -31,14 +26,10 @@ work.instance_eval do
 	else
 		error "Unknown platform: #{HOST}"
 	end
-	
+
 	@NAME = "mosync_bluetooth"
-	
-	setup
-	
-	config_file = CopyFileTask.new(self, "config_bluetooth.h", FileTask.new(self, "config_bluetooth.h.example"))
-	
-	@source_objects.each {|so| so.prerequisites << config_file }
+
+	@REQUIREMENTS = [CopyFileTask.new("config_bluetooth.h", FileTask.new("config_bluetooth.h.example"))]
 end
 
-work.invoke
+Works.run

@@ -2,19 +2,19 @@
 require File.expand_path('../../rules/dynlibconv.rb')
 
 # Create and populate default_etc.
-DirTask.new(nil, mosyncdir+'/bin/default_etc').invoke
+D = DirTask.new(mosyncdir+'/bin/default_etc')
 def jni(name, subDir = '')
-	CopyFileTask.new(nil, "#{mosyncdir}/bin/default_etc/#{name}",
-		FileTask.new(nil, "../../runtimes/java/platforms/androidJNI/#{subDir}#{name}")).invoke
+	CopyFileTask.new("#{mosyncdir}/bin/default_etc/#{name}",
+		FileTask.new("../../runtimes/java/platforms/androidJNI/#{subDir}#{name}"), [D])
 end
 jni('default.icon')
 jni('mosync.keystore')
 jni('icon.svg', 'AndroidProject/res/drawable/')
 
-CopyDirWork.new("#{mosyncdir}/bin", 'Batik', "build_package_tools/bin/Batik").invoke
+CopyDirTask.new("#{mosyncdir}/bin", 'Batik', "build_package_tools/bin/Batik")
 
 def cft(dst, src)
-	CopyFileTask.new(nil, dst, FileTask.new(nil, src)).invoke
+	CopyFileTask.new(dst, FileTask.new(src))
 end
 
 def copyIndependentFiles()
@@ -42,9 +42,9 @@ end
 # Populate bin.
 case(HOST)
 when :win32
-	CopyDirWork.new(mosyncdir, 'bin', "build_package_tools/mosync_bin").invoke
+	CopyDirTask.new(mosyncdir, 'bin', "build_package_tools/mosync_bin")
 when :darwin
-	CopyDirWork.new(mosyncdir, 'bin', "build_package_tools/osx_bin").invoke
+	CopyDirTask.new(mosyncdir, 'bin', "build_package_tools/osx_bin")
 	cft("#{mosyncdir}/bin/zip", '/usr/bin/zip')
 	cft("#{mosyncdir}/bin/unzip", '/sw/bin/unzip')
 	cft("#{mosyncdir}/bin/openssl", '/opt/local/bin/openssl')
@@ -61,4 +61,4 @@ else
 end
 
 # Copy platforms.
-CopyDirWork.new(mosyncdir, 'profiles/platforms', '../../platforms').invoke
+CopyDirTask.new(mosyncdir, 'profiles/platforms', '../../platforms')

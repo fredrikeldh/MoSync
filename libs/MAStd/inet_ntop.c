@@ -22,8 +22,8 @@ static const char rcsid[] = "$BINDId: inet_ntop.c,v 1.8 1999/10/13 16:39:28 vixi
 #ifdef USE_NEWLIB
 #include <errno.h>
 #endif
-#include <mavsprintf.h>
-#include <mastring.h>
+#include "mavsprintf.h"
+#include "mastring.h"
 
 #include "inet_ntop.h"
 

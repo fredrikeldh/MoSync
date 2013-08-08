@@ -2,10 +2,9 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['.']
-	@EXTRA_SOURCEFILES = [
+	@SOURCE_FILES = [
 		'../../runtimes/cpp/base/FileStream.cpp',
 		'../../runtimes/cpp/base/ThreadPool.cpp',
 		'../../runtimes/cpp/platforms/sdl/FileImpl.cpp',
@@ -21,10 +20,10 @@ work.instance_eval do
 		@LIBRARIES = ['wsock32', 'ws2_32']
 	elsif(HOST == :linux) then
 		@LIBRARIES = common_libraries + ['bluetooth', 'pthread']
-		@EXTRA_SOURCEFILES << '../../runtimes/cpp/platforms/sdl/mutexImpl.cpp'
+		@SOURCE_FILES << '../../runtimes/cpp/platforms/sdl/mutexImpl.cpp'
 	elsif(HOST == :darwin)
 		@LIBRARIES = common_libraries
-		@EXTRA_SOURCEFILES << '../../runtimes/cpp/platforms/sdl/mutexImpl.cpp'
+		@SOURCE_FILES << '../../runtimes/cpp/platforms/sdl/mutexImpl.cpp'
 	else
 		error 'Unsupported platform'
 	end
@@ -32,17 +31,4 @@ work.instance_eval do
 	@NAME = 'unitTestSocketServer'
 end
 
-target :default do
-	work.invoke
-end
-
-target :clean do
-	work.setup
-	work.execute_clean
-end
-
-target :run => :default do
-	sh work.target
-end
-
-Targets.invoke
+Works.run

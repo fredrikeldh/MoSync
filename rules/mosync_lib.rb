@@ -1,204 +1,52 @@
-# Copyright (C) 2009 Mobile Sorcery AB
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License, version 2, as published by
-# the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-# for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; see the file COPYING.  If not, write to the Free
-# Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
+# Include this file when building MoSync code.
 
-# This file defines helper classes used for compiling MoSync libraries for both
-# native and pipe platforms.
-# To use, call MoSyncLib.invoke with a module
-# which has the setup_native and setup_pipe methods defined.
+require "#{File.dirname(__FILE__)}/mosync_config.rb"
+require "#{File.dirname(__FILE__)}/mosync.rb"
+require "#{File.dirname(__FILE__)}/cLib.rb"
+require "#{File.dirname(__FILE__)}/mosyncGccModule.rb"
 
-require "#{File.dirname(__FILE__)}/dll.rb"
-require "#{File.dirname(__FILE__)}/native_lib.rb"
-require "#{File.dirname(__FILE__)}/pipe.rb"
-require "#{File.dirname(__FILE__)}/arm.rb"
-require "#{File.dirname(__FILE__)}/config.rb"
-require "#{File.dirname(__FILE__)}/bb10.rb"
-
-module MoSyncMod
+class MoSyncLib < LibWork
 	include MoSyncInclude
-	def modSetup
-		@EXTRA_INCLUDES = @EXTRA_INCLUDES.to_a + [mosync_include]
+
+	def copyHeaderFile(targetSubDir, srcFileName)
+		tfn = mosync_include + '/' + targetSubDir + '/' + File.basename(srcFileName)
+		dir = File.dirname(tfn)
+		return CopyFileTask.new(tfn, FileTask.new(srcFileName), [DirTask.new(dir)])
 	end
 
-	def copyHeaders(endings = ['.h', '.hpp'])
-		dir = mosync_include + "/" + @INSTALL_INCDIR
-		# create a bunch of CopyFileTasks, then invoke them all.
-		endings.each do |ending|
-			collect_headers(ending).each do |h|
-				task = CopyFileTask.new(self, dir + "/" + File.basename(h.to_s), h)
-				@prerequisites = [task] + @prerequisites.to_a
+	def default(sym, val)
+		if(sym == :LIB_TARGETDIR)
+			val = mosync_libdir + '/' + @BUILDDIR_NAME + '/'
+		end
+		s = ('@'+sym.to_s).to_sym
+		instance_variable_set(s, val) if(!instance_variable_defined?(s))
+	end
+
+	def initialize(compilerModule = DefaultMoSyncCCompilerModule, &block)
+		super(compilerModule) do
+			instance_eval(&block)
+			# Array of Strings, names of directories containing header files to copy.
+			default(:HEADER_DIRS, @SOURCES)
+			# String, name of subdirectory of mosync_include, where header files will be installed. Required if @HEADER_DIRS is not empty.
+			default(:HEADER_INSTALLDIR, nil)
+			# String, GCC flags describing the default include directories.
+			default(:DEFAULT_INCLUDES, " -I\"#{mosync_include}\"")
+
+			@EXTRA_CFLAGS ||= ''
+			@EXTRA_CFLAGS += @DEFAULT_INCLUDES
+			@EXTRA_CPPFLAGS ||= ''
+			@EXTRA_CPPFLAGS += @DEFAULT_INCLUDES
+
+			if(!@HEADER_DIRS.empty?)
+				need(:@HEADER_INSTALLDIR)
+				@REQUIREMENTS ||= []
+				endings = ['*.h', '*.hpp']
+				@HEADER_DIRS.each do |name|
+					endings.each do |e|
+						@REQUIREMENTS << CopyDirTask.new(mosync_include + '/' + @HEADER_INSTALLDIR, name, name, false, e)
+					end
+				end
 			end
 		end
-		@prerequisites = [DirTask.new(self, dir)] + @prerequisites
 	end
-
-	private
-
-	def collect_headers(ending)
-		default(:HEADER_DIRS, @SOURCES)
-		files = []
-		@HEADER_DIRS.each {|dir| files += Dir[dir+"/*"+ending]}
-		files.flatten!
-		if(defined?(@IGNORED_HEADERS))
-			files.reject! {|file| @IGNORED_HEADERS.member?(File.basename(file)) }
-		end
-		files.reject! {|file| File.directory?(file) }
-		return files.collect do |file| FileTask.new(self, file) end
-	end
-end
-
-class MoSyncDllWork < DllWork
-	include MoSyncMod
-	def setup
-		set_defaults
-		setup_native
-		modSetup
-		if(@TARGET_PLATFORM == :win32)
-			@EXTRA_LINKFLAGS = @EXTRA_LINKFLAGS.to_s + " -Wl,--enable-auto-import"
-		end
-		@EXTRA_CFLAGS = @EXTRA_CFLAGS.to_s + " -D_POSIX_SOURCE"	#avoid silly bsd functions
-		copyHeaders
-		super
-	end
-end
-
-class MoSyncArmLibWork < NativeLibWork
-	include MoSyncMod
-	include MoSyncArmGccMod
-	def setup
-		set_defaults
-		@COMMON_BUILDDIR = mosync_libdir + "/" + @COMMON_BUILDDIR_NAME + "/"
-		setup_pipe
-		modSetup
-		copyHeaders
-		super
-	end
-end
-
-class MoSyncBB10LibWork < BB10LibWork
-	include MoSyncMod
-	def setup
-		@prerequisites = []
-		set_defaults
-		@COMMON_BUILDDIR = mosync_libdir + "/" + @COMMON_BUILDDIR_NAME + "/"
-		if(respond_to?(:setup_native))
-			setup_native
-		else
-			setup_pipe
-		end
-		modSetup
-		copyHeaders
-		super
-	end
-end
-
-class Mapip2LibTask < NativeLibTask
-	def initialize(work, name, objects, libs, linkflags)
-		super(work, name, objects + libs)
-		@FLAGS = linkflags
-		@ar = "#{mosyncdir}/libexec/gcc/mapip2/4.6.3/ar"
-	end
-end
-
-class Mapip2LibWork < PipeGccWork
-	include MoSyncMod
-	def setup
-		set_defaults
-		@COMMON_BUILDDIR = mosync_libdir + "/" + @COMMON_BUILDDIR_NAME + "/"
-		@FLAGS = ''
-		setup_pipe
-		modSetup
-		copyHeaders
-		super
-	end
-	def pipeTaskClass; Mapip2LibTask; end
-	def libTasks; []; end
-
-	def setup3(all_objects, have_cppfiles)
-		targetdir = "#{mosync_libdir}/#{@BUILDDIR_NAME}"
-		@prerequisites << DirTask.new(self, targetdir)
-		@TARGET_PATH = "#{targetdir}/#{@NAME}.lib"
-		super(all_objects, have_cppfiles)
-	end
-end
-
-class PipeLibWork < PipeGccWork
-	include MoSyncMod
-	def setup
-		set_defaults
-		@FLAGS = " -L -quiet"
-		setup_pipe
-		modSetup
-		copyHeaders
-		super
-	end
-	def setup3(all_objects, have_cppfiles)
-		@TARGET_PATH = "#{mosync_libdir}/#{@BUILDDIR_NAME}/#{@NAME}.lib"
-		super(all_objects, have_cppfiles)
-		if(!USE_NEWLIB)	# rake support
-			d = (CONFIG == "debug") ? 'D' : ''
-			dir = "#{mosync_libdir}/pipe/"
-			@prerequisites << DirTask.new(self, dir)
-			@prerequisites << CopyFileTask.new(self, "#{dir}#{@NAME}#{d}.lib", @TARGET)
-		end
-	end
-	#def filename; @NAME + ".lib"; end
-end
-
-module MoSyncLib end
-
-def MoSyncLib.inin(work, mod)
-	work.extend(mod)
-	work.invoke
-end
-
-def MoSyncLib.clean(work, mod)
-	work.extend(mod)
-	work.setup
-	work.execute_clean
-end
-
-def MoSyncLib.invoke(mod)
-	target :pipe do
-		MoSyncLib.inin(PipeLibWork.new, mod)
-	end
-	target :native do
-		MoSyncLib.inin(MoSyncDllWork.new, mod)
-	end
-	target :arm do
-		MoSyncLib.inin(MoSyncArmLibWork.new, mod)
-	end
-	target :mapip2 do
-		MoSyncLib.inin(Mapip2LibWork.new, mod)
-	end
-	target :bb10 do
-		MoSyncLib.inin(MoSyncBB10LibWork.new, mod)
-	end
-	if(defined?(MODE) && MODE == 'bb10')
-		target :default => [:bb10]
-	elsif(USE_GNU_BINUTILS)
-		target :default => [:mapip2]
-	else
-		target :default => [:pipe]
-	end
-	target :clean do
-		MoSyncLib.clean(Mapip2LibWork.new, mod)
-	end
-	target :clean_native do
-		MoSyncLib.clean(MoSyncDllWork.new, mod)
-	end
-
-	Targets.invoke
 end

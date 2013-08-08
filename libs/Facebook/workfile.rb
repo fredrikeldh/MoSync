@@ -2,36 +2,28 @@
 
 require File.expand_path('../../rules/mosync_lib.rb')
 
-mod = Module.new
-mod.class_eval do
-	def copyFilesSubDir(name)
-		@INSTALL_INCDIR = 'Facebook/' + name
-		@HEADER_DIRS = [ name ]
-		copyHeaders
-	end
+MoSyncLib.new do
+	@SOURCES = ['.', 'GraphAPI', 'GraphAPI/GetConnections',
+		'GraphAPI/GetFacebookObjects', 'GraphAPI/GetFacebookObjects/FacebookObjects',
+		'GraphAPI/Publish', 'HTTP', 'JSON_lib']
+	@EXTRA_INCLUDES = ['.']
+	@SPECIFIC_CFLAGS = {
+		'FacebookPublisher2.cpp' => ' -Wno-vla',
+	}
 
-	def setup_pipe
-		@SOURCES = ['.', 'GraphAPI', 'GraphAPI/GetConnections',
-			'GraphAPI/GetFacebookObjects', 'GraphAPI/GetFacebookObjects/FacebookObjects',
-			'GraphAPI/Publish', 'HTTP', 'JSON_lib']
-		@EXTRA_INCLUDES = ['.']
-		@SPECIFIC_CFLAGS = {
-			'FacebookPublisher2.cpp' => ' -Wno-vla',
-		}
+	@HEADER_DIRS = [
+		'GraphAPI/GetFacebookObjects/FacebookObjects',
+		'GraphAPI/GetFacebookObjects',
+		'GraphAPI/GetConnections',
+		'GraphAPI/Publish',
+		'GraphAPI',
+		'JSON_lib',
+		'HTTP',
+		'.',
+	]
+	@HEADER_INSTALLDIR = 'Facebook'
 
-		copyFilesSubDir('GraphAPI/GetFacebookObjects/FacebookObjects')
-		copyFilesSubDir('GraphAPI/GetFacebookObjects')
-		copyFilesSubDir('GraphAPI/GetConnections')
-		copyFilesSubDir('GraphAPI/Publish')
-		copyFilesSubDir('GraphAPI')
-		copyFilesSubDir('JSON_lib')
-		copyFilesSubDir('HTTP')
-
-		@HEADER_DIRS = ['.']
-		@INSTALL_INCDIR = 'Facebook'
-
-		@NAME = 'Facebook'
-	end
+	@NAME = 'Facebook'
 end
 
-MoSyncLib.invoke(mod)
+Works.run

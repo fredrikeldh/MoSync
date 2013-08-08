@@ -4,26 +4,23 @@ require File.expand_path('../shared_work.rb')
 require File.expand_path('../../../../../rules/mosync_util.rb')
 
 class WindresTask < FileTask
-	def initialize(work, src)
+	def initialize(src)
 		@src = src
-		super(work, "build/#{File.basename(src)}.o")
+		super("build/#{File.basename(src)}.o")
 	end
-	def execute
+	def fileExecute
 		sh "windres #{@src} #{@NAME}"
 	end
 end
 
-work = MoSyncExe.new
-class << work
-	include SdlCommon
-end
-work.instance_eval do
+MoSyncExe.new do
+	extend SdlCommon
 	setup_common
 
 	BD = '../../../../..'
 	@SOURCES = [".", "#{BD}/runtimes/cpp/core/Recompiler"]
 	@IGNORED_FILES = ["debugger.cpp", 'ashmem.cpp']
-	@EXTRA_SOURCEFILES = ["#{BD}/runtimes/cpp/core/Core.cpp",
+	@SOURCE_FILES = ["#{BD}/runtimes/cpp/core/Core.cpp",
 		"#{BD}/runtimes/cpp/core/mainLoop.cpp",
 		"#{BD}/runtimes/cpp/core/sld.cpp",
 		"#{BD}/runtimes/cpp/core/GdbStub.cpp",
@@ -39,7 +36,7 @@ work.instance_eval do
 	end
 	if(HOST == :win32)
 		@EXTRA_LINKFLAGS << ' -mwindows'
-		@EXTRA_OBJECTS = [WindresTask.new(work, '../sdl.rc')]
+		@EXTRA_OBJECTS = [WindresTask.new('../sdl.rc')]
 	end
 	if(HOST == :darwin)
 		@EXTRA_INCLUDES << "#{BD}/tools/ReleasePackageBuild/build_package_tools/include"
@@ -50,8 +47,6 @@ work.instance_eval do
 	@NAME = "MoRE"
 
 	@INSTALLDIR = mosyncdir + '/bin'
-
-	setup
 end
 
-work.invoke
+Works.run

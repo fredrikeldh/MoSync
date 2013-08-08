@@ -1,3 +1,4 @@
+# DynLibConv modifies OSX shared libraries for distribution.
 
 class DynLibConv
 	def self.run(cur, new, fileList)

@@ -1,14 +1,17 @@
 #!/usr/bin/ruby
 
-require File.expand_path('../../rules/task.rb')
+require File.expand_path('../../rules/work.rb')
 
-task = FileTask.new(nil, '../../libs/MAUI-revamp/DefaultSkin.h')
-task.instance_eval do
-	@prerequisites = Dir.glob('*.png') +  Dir.glob('*.mof')
-	@prerequisites.collect! do |file| FileTask.new(nil, file) end
-	def execute
+class DefaultSkinTask < FileTask
+	def initialize
+		@prerequisites = Dir.glob('*.png') +  Dir.glob('*.mof')
+		@prerequisites.collect! do |file| FileTask.new(file) end
+		super('../../libs/MAUI-revamp/DefaultSkin.h')
+	end
+	def fileExecute
 		sh 'ruby Generator.rb'
 	end
 end
 
-task.invoke
+DefaultSkinTask.new
+Works.run

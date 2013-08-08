@@ -33,7 +33,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #ifndef _MAUTIL_GL_MOBLET_H_
 #define _MAUTIL_GL_MOBLET_H_
 
-#include <MAUtil/Moblet.h>
+#include "Moblet.h"
 
 namespace MAUtil {
 
@@ -102,8 +102,8 @@ public:
 	ApiVersion getApiVersion() const;
 
 	/**
-	* Get the current frames per second. Will take some time since 
-	* drawing has started to become stable. Will be 0 if isDrawing 
+	* Get the current frames per second. Will take some time since
+	* drawing has started to become stable. Will be 0 if isDrawing
 	* equals to false.
 	*/
 	float getActualFramesPerSecond() const;

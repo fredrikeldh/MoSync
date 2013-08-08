@@ -2,40 +2,32 @@
 
 require File.expand_path('../../rules/mosync_lib.rb')
 
-mod = Module.new
-mod.class_eval do
-	def setup_pipe
-		@SOURCES = [
-			".",
-			"Libs",
-			"Libs/JSNativeUI",
-			"Libs/Notification",
-	        "Libs/Orientation",
-			"Libs/PhoneGap",
-			"Libs/W3C",
-			"Libs/Extensions"]
+MoSyncLib.new do
+	@SOURCES = [
+		".",
+		"Libs",
+		"Libs/JSNativeUI",
+		"Libs/Notification",
+		"Libs/Orientation",
+		"Libs/PhoneGap",
+		"Libs/W3C",
+		"Libs/Extensions",
+	]
+	@EXTRA_INCLUDES = ['.']
 
-		@EXTRA_INCLUDES = ['.']
+	@HEADER_DIRS = [
+		'Libs',
+		'Libs/JSNativeUI',
+		'Libs/Notification',
+		'Libs/Orientation',
+		'Libs/PhoneGap',
+		'Libs/W3C',
+		'Libs/Extensions',
+		'.',
+	]
+	@HEADER_INSTALLDIR = "Wormhole"
 
-		copyFilesSubDir("Libs")
-		copyFilesSubDir("Libs/JSNativeUI")
-		copyFilesSubDir("Libs/Notification")
-		copyFilesSubDir("Libs/Orientation")
-		copyFilesSubDir("Libs/PhoneGap")
-		copyFilesSubDir("Libs/W3C")
-		copyFilesSubDir("Libs/Extensions")
-
-		@HEADER_DIRS = ['.']
-		@INSTALL_INCDIR = "Wormhole"
-
-		@NAME = "Wormhole"
-	end
-
-	def copyFilesSubDir(name)
-		@INSTALL_INCDIR = "Wormhole/" + name
-		@HEADER_DIRS = [name]
-		copyHeaders
-	end
+	@NAME = "Wormhole"
 end
 
-MoSyncLib.invoke(mod)
+Works.run

@@ -4,33 +4,26 @@ require File.expand_path('../shared_work.rb')
 
 # todo: make sure only syscalls are exported.
 
-work = MoSyncDll.new
-class << work
-	include SdlCommon
-end
-
-work.instance_eval do
+MoSyncDll.new do
+	extend SdlCommon
 	setup_common
-	
-	@SOURCES = []
-	@EXTRA_SOURCEFILES = ["main.cpp"]
+
+	@SOURCE_FILES = ["main.cpp"]
 	@SPECIFIC_CFLAGS = {"main.cpp" => " -DMOSYNC_DLL_EXPORT -Wno-missing-noreturn",
 		"mosyncmain.cpp" => " -DMOSYNC_DLL_IMPORT"}
-	@WHOLE_LIBS = ["mosync_sdl"]
+	# mosync_sdl must be first, since it depends on the others.
+	@LOCAL_LIBS = ["mosync_sdl"] + @LOCAL_LIBS
 	if(HOST == :win32)
 		@LIBRARIES += ["OpenGL32", "GlU32", "Gdi32"]
-		@EXTRA_OBJECTS = [FileTask.new(self, "mosynclib.def")]
+		@EXTRA_OBJECTS = [FileTask.new("mosynclib.def")]
 	end
-	
+
 	@NAME = "mosync"
 end
 
-main = NativeMoSyncLib.new
-main.instance_eval do
-	@SOURCES = []
-	@EXTRA_SOURCEFILES = ["mosyncmain.cpp"]
+NativeMoSyncLib.new do
+	@SOURCE_FILES = ["mosyncmain.cpp"]
 	@NAME = "mosyncmain"
 end
 
-work.invoke
-main.invoke
+Works.run

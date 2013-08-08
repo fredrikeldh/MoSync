@@ -19,17 +19,6 @@ require "#{File.dirname(__FILE__)}/config.rb"
 # This module contains functions for saving and comparing compile or link flags.
 # execFlags and flagsNeeded require the function "cFlags".
 module FlagsChanged
-	# Call from initialize.
-	def initFlags
-		# save cflags to disk, for use as dependency.
-		# but first read it back from disk, if existing.
-		@FLAGSFILE = @NAME + ".flags"
-		if(File.exists?(@FLAGSFILE)) then
-			@OLDFLAGS = open(@FLAGSFILE) { |f| f.read }
-		end
-		#puts "Oldflags: #{@OLDFLAGS.inspect}"
-	end
-
 	# Call from execute.
 	def execFlags
 		if(@OLDFLAGS != cFlags) then
@@ -38,20 +27,36 @@ module FlagsChanged
 		end
 	end
 
-	def needed?(log = true)
-		return true if(super(log))
-		return flagsNeeded?(log)
-	end
-
-	# Call from needed?, if the including class implements it.
-	def flagsNeeded?(log=true)
-		#puts "Oldflags: #{@OLDFLAGS.inspect} newflags: #{@FLAGS.inspect}"
-		if(@OLDFLAGS != cFlags)
-			puts "Because the flags have changed:" if(log)
-			puts "Old: #{@OLDFLAGS}" if(log && PRINT_FLAG_CHANGES)
-			puts "New: #{cFlags}" if(log && PRINT_FLAG_CHANGES)
-			return true
+	def setNeeded
+		@FLAGSFILE = @NAME + ".flags"
+		super
+		return if(@needed)
+		if(File.exists?(@FLAGSFILE)) then
+			@OLDFLAGS = open(@FLAGSFILE) { |f| f.read.strip }
+		else
+			@needed = "Because the flags file is missing:"
+			return
 		end
-		return false
+		f = cFlags
+		if(!@needed && @OLDFLAGS != f)
+			@needed = "Because the flags have changed:"
+			if(PRINT_FLAG_CHANGES)
+				@needed << "\nOld: #{@OLDFLAGS}"
+				@needed << "\nNew: #{f}\n"
+				#p @OLDFLAGS, f
+				#p @OLDFLAGS.length, f.length
+				#p @OLDFLAGS.class, f.class
+				#p (@OLDFLAGS == f)
+				#p (@OLDFLAGS.eql?(f))
+				for i in (0 .. f.length) do
+					if(f[i] != @OLDFLAGS[i])
+						#puts "Diff at pos #{i}"
+						@needed << "Diff at pos #{i}\n"
+						break
+					end
+				end
+			end
+			#raise hell
+		end
 	end
 end

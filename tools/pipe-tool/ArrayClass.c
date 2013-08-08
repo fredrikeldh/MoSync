@@ -40,7 +40,7 @@ ArrayStore *CurrentArray = 0;
 void ArrayInit(ArrayStore *theArray, uint type, uint size)
 {
 	theArray->array = 0;
-	
+
 	if (type == 0)
 		return;
 
@@ -50,7 +50,7 @@ void ArrayInit(ArrayStore *theArray, uint type, uint size)
 	theArray->array = (void *) NewPtrClear(type * size);
 	theArray->size = size;
 	theArray->type = type;
-	
+
 	theArray->lo = ARRAY_LOW_VAL;
 	theArray->hi = 0;
 	theArray->ps = 0;
@@ -102,14 +102,14 @@ void * ArrayPtr(ArrayStore *theArray, uint index)
 	int bytesToClear;
 	char *clearMem;
 	char *arrayPtr;
-	
+
 	if (!theArray->array)
 		return 0;
 
 	if (index >= theArray->size)
 	{
 		int newsize = index + ARRAY_BLOCK_CHUNK;
-	
+
 		theArray->array = (void *) ReallocPtr((char *) theArray->array,  theArray->type * newsize);
 
 		if (!theArray->array)
@@ -123,7 +123,7 @@ void * ArrayPtr(ArrayStore *theArray, uint index)
 
 		// Set the new size
 
-		theArray->size = newsize;	
+		theArray->size = newsize;
 	}
 
 	if (index > theArray->hi)
@@ -147,14 +147,14 @@ void * ArrayPtrBound(ArrayStore *theArray, int startIndex, uint endIndex)
 	int bytesToClear;
 	char *clearMem;
 	char *arrayPtr;
-	
+
 	if (!theArray->array)
 		return 0;
 
 	if (endIndex >= theArray->size)
 	{
 		int newsize = endIndex + ARRAY_BLOCK_CHUNK;
-	
+
 		theArray->array = (void *) ReallocPtr((char *) theArray->array,  theArray->type * newsize);
 
 		if (!theArray->array)
@@ -168,7 +168,7 @@ void * ArrayPtrBound(ArrayStore *theArray, int startIndex, uint endIndex)
 
 		// Set the new size
 
-		theArray->size = newsize;	
+		theArray->size = newsize;
 	}
 
 	if (endIndex > theArray->hi)
@@ -197,7 +197,7 @@ void ArraySet(ArrayStore *theArray, uint index, uint value)
 	if (index >= theArray->size)
 	{
 		int newsize = index + ARRAY_BLOCK_CHUNK;
-	
+
 		theArray->array = (void *) ReallocPtr((char *) theArray->array,  theArray->type * newsize);
 
 		if (!theArray->array)
@@ -211,7 +211,7 @@ void ArraySet(ArrayStore *theArray, uint index, uint value)
 
 		// Set the new size
 
-		theArray->size = newsize;	
+		theArray->size = newsize;
 	}
 
 	switch(theArray->type)
@@ -231,7 +231,7 @@ void ArraySet(ArrayStore *theArray, uint index, uint value)
 		}
 		break;
 	}
-	
+
 	if (index > theArray->hi)
 		theArray->hi = index;
 
@@ -275,10 +275,10 @@ uint ArrayGet(ArrayStore *theArray, uint index)
 {
 	if (!theArray->array)
 		return 0;
-		
+
 	if (index >= theArray->size)
 		return 0;
-	
+
 	switch(theArray->type)
 	{
 		case 1:
@@ -335,7 +335,7 @@ void ArrayCopy(ArrayStore *dstArray, ArrayStore *srcArray)
 int ArraySearch(ArrayStore *theArray, uint value)
 {
 	uint n;
-	
+
 	if (!theArray->array)
 		return 0;
 
@@ -347,7 +347,7 @@ int ArraySearch(ArrayStore *theArray, uint value)
 			return n;
 	}
 
-	return -1;	
+	return -1;
 }
 
 //****************************************
@@ -355,7 +355,7 @@ int ArraySearch(ArrayStore *theArray, uint value)
 //****************************************
 
 char * ArrayFileInfo(ArrayStore *theArray, int *len)
-{	
+{
 	if (!theArray->array)
 		return 0;
 
@@ -371,12 +371,12 @@ int ArrayWrite(ArrayStore *theArray, char *filename)
 {
 	FILE *theFile;
 	size_t len;
-	
+
 	if (!theArray->array)
 		return 0;
 
 	theFile = fopen(filename, "wb");
-	
+
 	if (!theFile)
 		return 0;
 
@@ -385,11 +385,11 @@ int ArrayWrite(ArrayStore *theArray, char *filename)
 	if (fwrite(theArray->array, 1, len, theFile) != len)
 	{
 		fclose(theFile);
-		return 0;	
+		return 0;
 	}
 
 	fclose(theFile);
-	return len;	
+	return len;
 }
 
 //****************************************
@@ -408,9 +408,9 @@ int ArrayWriteFP(ArrayStore *theArray, FILE *theFile, size_t len)
 		len = theArray->type * theArray->hi;
 
 	if (fwrite(theArray->array, 1, len, theFile) != len)
-		return 0;	
+		return 0;
 
-	return len;	
+	return len;
 }
 
 //****************************************
@@ -423,11 +423,11 @@ void ArrayPrint(ArrayStore *theArray, char *Template, ...)
 	va_list 		args;
 	int 			len;
 	int				n;
-		
+
 	va_start(args,Template);
 	vsprintf(tbuf,Template,args);
 	va_end(args);
-		
+
 	len = strlen(tbuf);
 
 	for (n=0;n<len;n++)
@@ -442,7 +442,7 @@ void ArrayPrint(ArrayStore *theArray, char *Template, ...)
 
 void arraySelect(ArrayStore *theArray)
 {
-	CurrentArray = theArray->array;
+	CurrentArray = (ArrayStore*)theArray->array;
 }
 
 uint arrayGet(int index)
@@ -476,7 +476,7 @@ void ArrayPrint(ArrayStore *theArray, char *heading)
 		printf("array is null\n");
 		return;
 	}
-	
+
 	for (n=0;n<theArray->hi+1;n++)
 	{
 		SYMBOL *sym = (SYMBOL *) ArrayGet(theArray, n);
@@ -500,7 +500,7 @@ void ArrayTest()
 {
 	ArrayStore	test;
 	int n;
-		
+
 	ArrayInit(&test, 0);
 
 	//ArraySet(&test, 0, 99);
@@ -512,9 +512,9 @@ void ArrayTest()
 
 		printf("%d: %d --> Size %d\n", n, ArrayGet(&test, n), test.size );
 	}
-	
+
 	printf("low %d, hi %d\n", test.lo, test.hi );
-	
+
 }
 
 */

@@ -2,8 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ["."]
 	@LOCAL_LIBS = ["filelist"]
 	#if ( HOST == :darwin )
@@ -24,4 +23,4 @@ work.instance_eval do
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-work.invoke
+Works.run

@@ -2,18 +2,17 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ["."]
 	@NAME = "nbuild"
 	@TARGETDIR = "."
 	@SPECIFIC_CFLAGS = {
-        "nbuild.cpp" => " -Wno-missing-noreturn",
+		"nbuild.cpp" => " -Wno-missing-noreturn",
 	}
-    if ( HOST == :darwin )
-        # Objective-C++ compiler
-        @EXTRA_CPPFLAGS = " -Wno-shadow -Wno-missing-prototypes"
-    end
+	if ( HOST == :darwin )
+		# Objective-C++ compiler
+		@EXTRA_CPPFLAGS = " -Wno-shadow -Wno-missing-prototypes"
+	end
 	@LOCAL_LIBS = ["filelist", "profiledb", "mustache"]
 	if(HOST==:linux || HOST==:darwin)
 		@LIBRARIES = ["expat"]
@@ -23,4 +22,4 @@ work.instance_eval do
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-work.invoke
+Works.run

@@ -2,12 +2,11 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ["."]
-	@EXTRA_CPPFLAGS = ""	
+	@EXTRA_CPPFLAGS = ""
 	@NAME = "mifconv"
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-work.invoke
+Works.run

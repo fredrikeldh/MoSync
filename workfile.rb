@@ -2,9 +2,9 @@
 
 # File.expand_path is used here to ensure the files are really only loaded once.
 require File.expand_path('rules/githooks.rb')
-require File.expand_path('rules/targets.rb')
 require File.expand_path('rules/host.rb')
-require File.expand_path('rules/task.rb')
+require File.expand_path('rules/work.rb')
+require File.expand_path('rules/subdir.rb')
 require File.expand_path('rules/mosync_util.rb')
 
 enforceGithooks
@@ -69,18 +69,19 @@ ALL_DIRS = MAIN_DIRS + EXAM_DIRS
 
 LIB_DIRS = ['libs']
 
-SKINS = CopyDirWork.new(mosyncdir, 'skins')
-RULES = CopyDirWork.new(mosyncdir, 'rules')
+SKINS = CopyDirTask.new(mosyncdir, 'skins')
+RULES = CopyDirTask.new(mosyncdir, 'rules')
 
 class GenOpcodesTask < FileTask
 	def initialize(mode, name)
-		super(nil, name)
 		@mode = mode
 		@gen = 'runtimes/cpp/core/gen-opcodes.rb'
-		@prerequisites << FileTask.new(nil, @gen)
-		@prerequisites << DirTask.new(nil, File.dirname(@NAME))
+		@prerequisites ||= []
+		@prerequisites << FileTask.new(@gen)
+		@prerequisites << DirTask.new(File.dirname(name))
+		super(name)
 	end
-	def execute
+	def fileExecute
 		sh "ruby #{@gen} #{@mode} #{@NAME}"
 	end
 end
@@ -89,63 +90,55 @@ GEN_OPCODES = GenOpcodesTask.new('ccore', 'runtimes/cpp/core/gen-opcodes.h')
 GEN_CS_OPCODES = GenOpcodesTask.new('cscore', 'runtimes/csharp/windowsphone/mosync/mosyncRuntime/Source/gen-core.cs')
 GEN_JAVA_OPCODES = GenOpcodesTask.new('jcore', 'runtimes/java/Shared/generated/gen-opcodes.h')
 
-class ExtensionIncludeWork < Work
-	def setup
-		extIncDir = mosyncdir + '/ext-include'
-		@prerequisites = []
-		@prerequisites << DirTask.new(self, extIncDir)
-		sources = [
-			'runtimes/cpp/core/extensionCommon.h',
-			'runtimes/cpp/core/ext/invoke-extension.h',
-			'runtimes/cpp/core/ext/extension.h',
-			'runtimes/cpp/core/syscall_arguments.h',
-			'runtimes/cpp/core/CoreCommon.h',
-			'intlibs/helpers/cpp_defs.h',
-			'intlibs/helpers/maapi_defs.h',
-			]
-		sources.each do |src|
-			@prerequisites << CopyFileTask.new(self, "#{extIncDir}/#{File.basename(src)}",
-				FileTask.new(self, src))
-		end
+def extensionIncludes
+	extIncDir = mosyncdir + '/ext-include'
+	d = DirTask.new(extIncDir)
+	sources = [
+		'runtimes/cpp/core/extensionCommon.h',
+		'runtimes/cpp/core/ext/invoke-extension.h',
+		'runtimes/cpp/core/ext/extension.h',
+		'runtimes/cpp/core/syscall_arguments.h',
+		'runtimes/cpp/core/CoreCommon.h',
+		'intlibs/helpers/cpp_defs.h',
+		'intlibs/helpers/maapi_defs.h',
+		]
+	sources.each do |src|
+		CopyFileTask.new("#{extIncDir}/#{File.basename(src)}",
+			FileTask.new(src), [d])
 	end
 end
 
-EXTENSION_INCLUDES = ExtensionIncludeWork.new
+Works.run(false)
 
-target :base => [SKINS, RULES] do
-	SKINS.invoke
-	RULES.invoke
-	GEN_OPCODES.invoke
-	GEN_CS_OPCODES.invoke
-	GEN_JAVA_OPCODES.invoke
-	Work.invoke_subdirs(PRE_DIRS)
-	#Work.invoke_subdir("tools/WrapperGenerator", "compile")
-	Work.invoke_subdir("tools/idl2", "compile")
-	EXTENSION_INCLUDES.invoke
+target :base do
+	Works.invoke_subdirs(PRE_DIRS)
+	#Works.invoke_subdir("tools/WrapperGenerator", "compile")
+	Works.invoke_subdir("tools/idl2", "compile")
+	extensionIncludes
 end
 
 target :main => :base do
-	Work.invoke_subdirs(MAIN_DIRS)
+	Works.invoke_subdirs(MAIN_DIRS)
 end
 
 target :default => :main do
-	Work.invoke_subdirs_ex(true, LIB_DIRS)
+	Works.invoke_subdirs_ex(true, LIB_DIRS)
 end
 
 target :libs => :base do
-	Work.invoke_subdir('tools/DefaultSkinGenerator')
-	Work.invoke_subdirs_ex(true, LIB_DIRS)
+	Works.invoke_subdir('tools/DefaultSkinGenerator')
+	Works.invoke_subdirs_ex(true, LIB_DIRS)
 end
 
 target :examples => :default do
-	Work.invoke_subdirs_ex(true, EXAM_DIRS)
+	Works.invoke_subdirs_ex(true, EXAM_DIRS)
 end
 
 target :all => :examples do
 end
 
 target :more => :base do
-	Work.invoke_subdirs(MORE_DIRS)
+	Works.invoke_subdirs(MORE_DIRS)
 end
 
 target :version do
@@ -164,37 +157,37 @@ end
 
 target :clean_more do
 	verbose_rm_rf("build")
-	Work.invoke_subdirs(PRE_DIRS, "clean")
-	Work.invoke_subdir("tools/idl2", "clean")
-	Work.invoke_subdirs(MORE_DIRS, "clean")
+	Works.invoke_subdirs(PRE_DIRS, "clean")
+	Works.invoke_subdir("tools/idl2", "clean")
+	Works.invoke_subdirs(MORE_DIRS, "clean")
 end
 
 target :clean do
 	verbose_rm_rf("build")
-	Work.invoke_subdirs(PRE_DIRS, "clean")
-	Work.invoke_subdir("tools/idl2", "clean")
-	Work.invoke_subdirs(MAIN_DIRS, "clean")
+	Works.invoke_subdirs(PRE_DIRS, "clean")
+	Works.invoke_subdir("tools/idl2", "clean")
+	Works.invoke_subdirs(MAIN_DIRS, "clean")
 end
 
 target :clean_examples do
-	Work.invoke_subdirs_ex(true, EXAM_DIRS, "clean")
+	Works.invoke_subdirs_ex(true, EXAM_DIRS, "clean")
 end
 
 target :clean_all => :clean do
-	Work.invoke_subdirs_ex(true, LIB_DIRS, "clean")
-	Work.invoke_subdirs_ex(true, EXAM_DIRS, "clean")
+	Works.invoke_subdirs_ex(true, LIB_DIRS, "clean")
+	Works.invoke_subdirs_ex(true, EXAM_DIRS, "clean")
 end
 
 target :check_libs => :base do
-	Work.invoke_subdirs(PIPE_DIRS)
-	Work.invoke_subdir_ex(true, 'libs/MAStd') unless(USE_NEWLIB)
-	Work.invoke_subdir_ex(true, 'libs/newlib') if(USE_NEWLIB)
-	Work.invoke_subdir_ex(true, 'libs/MAUtil')
+	Works.invoke_subdirs(PIPE_DIRS)
+	Works.invoke_subdir_ex(true, 'libs/MAStd') unless(USE_NEWLIB)
+	Works.invoke_subdir_ex(true, 'libs/newlib') if(USE_NEWLIB)
+	Works.invoke_subdir_ex(true, 'libs/MAUtil')
 end
 
 target :check => :check_libs do
-	Work.invoke_subdirs(MORE_DIRS)
-	Work.invoke_subdir_ex(true, 'testPrograms/gcc-torture')
+	Works.invoke_subdirs(MORE_DIRS)
+	Works.invoke_subdir_ex(true, 'testPrograms/gcc-torture')
 end
 
 # non-native only. don't modify; used by build system.
@@ -237,4 +230,4 @@ target :bb10_ex do
 	bb10_configs('examples')
 end
 
-Targets.invoke
+Works.run

@@ -14,28 +14,20 @@ class SisWork < MoSyncExe
 		end
 		@LIBRARIES = ["z"]
 		@CUSTOM_LIBS = ["libeay32.lib"]
+		@INSTALLDIR = mosyncdir + '/bin'
 	end
 end
 
-makesis = SisWork.new
-makesis.instance_eval do
+SisWork.new do
 	init
 	@IGNORED_FILES += ["signsis.cpp"]
 	@NAME = "makesis-4"
-	
-	@INSTALLDIR = mosyncdir + '/bin'
-
 end
 
-signsis = SisWork.new
-signsis.instance_eval do
+SisWork.new do
 	init
 	@IGNORED_FILES += ["makesis.cpp"]
 	@NAME = "signsis-4"
-	
-	@INSTALLDIR = mosyncdir + '/bin'
-
 end
 
-makesis.invoke
-signsis.invoke
+Works.run

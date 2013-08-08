@@ -1,9 +1,16 @@
 #!/usr/bin/ruby
 
+require File.expand_path('../../../../rules/arg_handler.rb')
+
+Works.registerArgHandler(:NATIVE_RUNTIME) do |value|
+	NATIVE_RUNTIME = value
+end
+
 require File.expand_path('../../../../rules/native_mosync.rb')
 
-work = NativeMoSyncLib.new
-work.instance_eval do
+default_const(:NATIVE_RUNTIME, false)
+
+NativeMoSyncLib.new do
 	@SOURCES = [".", "./thread", "./Skinning", "../../base", "../../base/thread",
 		"../../../../intlibs/hashmap"]
 	@IGNORED_FILES = ["Image.cpp", "audio.cpp"]
@@ -16,7 +23,7 @@ work.instance_eval do
 	if(HOST == :win32) then
 		@EXTRA_INCLUDES = common_includes
 		@LIBRARIES = common_libraries
-		@EXTRA_SOURCEFILES = ['../../../../intlibs/glew/src/glew.c']
+		@SOURCE_FILES = ['../../../../intlibs/glew/src/glew.c']
 		@EXTRA_INCLUDES << '../../../../intlibs/glew/include'
 		@SPECIFIC_CFLAGS['glew.c'] = ' -Wno-attributes -Wno-error -DGLEW_STATIC'
 		@SPECIFIC_CFLAGS['OpenGLES2.cpp'] = ' -DGLEW_STATIC'
@@ -60,15 +67,16 @@ work.instance_eval do
 		end
 	end
 
+	if(!File.exist?("config_platform.h"))
+		@REQUIREMENTS = [CopyFileTask.new("config_platform.h", FileTask.new("config_platform.h.example"))]
+	end
+
 	@NAME = "mosync_sdl"
 end
 
-if(!File.exist?("config_platform.h"))
-  CopyFileTask.new(work, "config_platform.h",
-	  FileTask.new(work, "config_platform.h.example")).invoke
+if(!(NATIVE_RUNTIME == "true"))
+	DirTask.new("#{mosyncdir}/etc")
+	CopyFileTask.new("#{mosyncdir}/bin/default_contacts.xml", FileTask.new("contacts.xml"))
 end
-CopyFileTask.new(work, "#{mosyncdir}/bin/default_contacts.xml",
-	FileTask.new(work, "contacts.xml"),
-	[DirTask.new(work, "#{mosyncdir}/etc")]).invoke if(!(NATIVE_RUNTIME == "true"))
 
-work.invoke
+Works.run

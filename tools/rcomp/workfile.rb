@@ -2,8 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-rcomp = MoSyncExe.new
-rcomp.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['src']
 	@EXTRA_INCLUDES = ['inc', 'src']
 	@IGNORED_FILES = ['linkarra.cpp']
@@ -16,14 +15,10 @@ rcomp.instance_eval do
 		'rcomp.cpp' => ' -Wno-unused-function -Wno-undef',
 		'numval.cpp' => ' -Wno-float-equal',
 	}
+	@SPECIFIC_CFLAGS['rcomp.cpp'] << ' -Wno-delete-non-virtual-dtor' if(@GCC_V4_SUB >= 7)
 	#@LIBRARIES = ['z']
 	@NAME = 'rcomp'
 	@INSTALLDIR = mosyncdir + '/bin'
-	def setup
-		set_defaults
-		@SPECIFIC_CFLAGS['rcomp.cpp'] << ' -Wno-delete-non-virtual-dtor' if(@GCC_V4_SUB >= 7)
-		super
-	end
 end
 
-rcomp.invoke
+Works.run
