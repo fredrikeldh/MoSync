@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
-require File.expand_path('../rules/mosync.rb')
 require File.expand_path('../rules/subdir.rb')
+require File.expand_path('../rules/mosync.rb')
 
 target :pipe do
 	Works.invoke_subdirs(SUBDIRS, 'pipe')

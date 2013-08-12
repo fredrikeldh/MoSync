@@ -1,6 +1,7 @@
 require "#{File.dirname(__FILE__)}/cExe.rb"
 require "#{File.dirname(__FILE__)}/cDll.rb"
 require "#{File.dirname(__FILE__)}/cLib.rb"
+require "#{File.dirname(__FILE__)}/mosync.rb"
 
 module NativeMoSyncWork
 	def set_defaults

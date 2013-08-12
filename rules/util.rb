@@ -84,8 +84,12 @@ end
 
 def sh(cmd)
 	# Print the command to stdout.
-	puts cmd
-	if(true)#HOST == :win32)
+	if(cmd.is_a?(Array))
+		p cmd
+	else
+		puts cmd
+	end
+	if(false)#HOST == :win32)
 		success = system(cmd)
 		error "Command failed" unless(success)
 	else

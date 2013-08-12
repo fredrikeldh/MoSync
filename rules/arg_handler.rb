@@ -20,7 +20,8 @@ public
 	end
 	def self.registerConstArg(sym, default)
 		registerArgHandler(sym) do |value|
-			const_set(sym, value)
+			#puts "#{sym} = #{value}"
+			set_const(sym, value)
 		end
 		@@args_default[sym] = default
 	end

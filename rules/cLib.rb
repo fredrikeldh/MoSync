@@ -4,12 +4,12 @@ require "#{File.dirname(__FILE__)}/host.rb"
 class LibWork < CCompileWork
 	def cFlags
 		return @cFlags if(@cFlags)
-		return @cFlags = libCmd
+		return @cFlags = libCmd + objectFlags
 	end
 	def fileExecute
 		execFlags
 		preLib
-		sh cFlags
+		sh libCmd
 		postLib
 	end
 	def targetName()

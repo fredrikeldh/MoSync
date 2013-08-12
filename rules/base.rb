@@ -163,7 +163,7 @@ class Works
 	# If one fails, let the other running ones complete before returning.
 	def self.run(doGoals = true)
 		raise "Multiple runs are not allowed!" if(doGoals && @@goalsDone)
-		parseArgs() if(!@@args_handled)
+		parseArgs(doGoals) if(!@@args_handled)
 		run2
 		return if(!doGoals)
 		# copy to local, in case a goal calls invoke_subdir.
@@ -291,10 +291,10 @@ class Works
 		end
 	end
 
-	def self.parseArgs()
+	def self.parseArgs(doGoals = false)
 		#p args
 		raise hell if(@@args_handled)
-		@@args.each do |a| handle_arg(a) end
+		@@args.each do |a| handle_arg(a, doGoals) end
 		@@args_handled = true
 		@@args_default.each do |sym, val|
 			default_const(sym, val)
@@ -415,7 +415,7 @@ class Works
 						n.neededCount -= 1
 						@@tasks << n if(n.neededCount == 0)
 						raise hell if(n.neededCount < 0)
-						@@cond.signal
+						@@cond.broadcast
 					end
 				end
 				# if there are no more tasks, and all other threads are waiting, we're done.
@@ -427,20 +427,20 @@ class Works
 		end
 	end
 
-	def self.handle_arg(a)
+	def self.handle_arg(a, doGoals)
 		i = a.index('=')
 		if(i) then
+			name = a[0, i]
 			if(@@handlers[name])
-				puts "Handler #{name}"
-				@@handlers[name].each do |block|
-					block.call(value)
-				end
+				#puts "Handler #{name}"
+				value = a[i+1 .. -1]
+				@@handlers[name].call(value)
 			else
-				raise "Unhandled argument #{a}"
+				raise "Unhandled argument #{a}" unless(@@ignore_unhandled_args)
 			end
 		else
 			g = a.to_sym
-			raise "Goal #{g} is not a target in the current workfile!" if(!@@targets[g])
+			raise "Goal #{g} is not a target in the current workfile!" if(!@@targets[g] && doGoals)
 			#puts "Goal add #{g}"
 			@@goals << g
 		end

@@ -52,7 +52,7 @@ class FileTask < Task
 		rescue => e
 			# In case the output file is created in error
 			FileUtils.rm_f(@NAME)
-			puts "Task creation backtrace:\n" + @backtrace.join("\n")
+			puts "Task creation backtrace:\n" + @backtrace.join("\n") if(CONFIG_PRINT_FILETASK_BACKTRACE)
 			raise
 		end
 	end

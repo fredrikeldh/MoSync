@@ -15,7 +15,6 @@ MoSyncLib.new do
 	@IGNORED_FILES = ["DomParser.cpp", "XMLDataProvider.cpp", "XPathTokenizer.cpp"]
 	@IGNORED_HEADERS = ["DomParser.h", "XMLDataProvider.h", "XPathTokenizer.h", "Tokenizer.h", "ErrorListenable.h"]
 
-	p @CONFIG
 	if(@CONFIG == "release")
 		# broken compiler
 		@SPECIFIC_CFLAGS = {

@@ -1,3 +1,6 @@
+require "#{File.dirname(__FILE__)}/arg_handler.rb"
+
+Works.registerConstArg(:CONFIG_SUBDIR_RELOAD, false)
 
 class Works
 	def self.invoke_subdir(dir, *args)
@@ -22,9 +25,9 @@ class Works
 					args << " #{name}=\"#{const_get(name)}\""
 				end
 			end
-			cmd = "#{workfileName} #{args}"
+			cmd = "#{File.expand_path(workfileName)} #{args}"
 			if(HOST == :win32)
-				sh "ruby #{cmd}"
+				sh "ruby -r\"#{File.dirname(__FILE__)}/subdir_arg_handler.rb\" #{cmd}"
 			else
 				sh "./#{cmd}"
 			end

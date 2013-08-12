@@ -1,8 +1,12 @@
 #!/usr/bin/ruby
 
 require File.expand_path('../../rules/mosync_lib.rb')
+require './shared.rb'
 
 MoSyncLib.new do
+	extend MAStd
+	initMAStd
+
 	@IGNORED_FILES = []
 	if(@CONFIG == "release" && @GCC_IS_V4)
 		#broken compiler/stdlib
@@ -54,9 +58,6 @@ MoSyncLib.new do
 	@EXTRA_INCLUDES = ['.']
 	@DEFAULT_INCLUDES = ''
 	@SPECIFIC_CFLAGS = @pipe_specific_cflags
-	if(@CONFIG=="debug")
-		@EXTRA_CFLAGS = " -DMOSYNCDEBUG"
-	end
 
 	if(USE_GNU_BINUTILS)
 		@COLLECT_S_FILES = false
@@ -66,11 +67,6 @@ MoSyncLib.new do
 	else
 		@EXTRA_OBJECTS = [FileTask.new("crtlib.s"), FileTask.new("mastack.s")]
 	end
-	@REQUIREMENTS = [
-		copyHeaderFile('.', '../libsupc++/new'),
-		copyHeaderFile('.', '../libsupc++/macpp.h'),
-		copyHeaderFile('ResCompiler', '../ResCompiler/ResCompiler.h'),
-	]
 	@HEADER_DIRS = [
 		'GLES',
 		'GLES2',

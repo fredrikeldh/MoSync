@@ -25,10 +25,17 @@ class MoSyncLib < LibWork
 	def initialize(compilerModule = DefaultMoSyncCCompilerModule, &block)
 		super(compilerModule) do
 			instance_eval(&block)
-			# Array of Strings, names of directories containing header files to copy.
+
+			# Array of Strings, names of directories containing header files to copy into mosync_include/@HEADER_INSTALLDIR/d.
 			default(:HEADER_DIRS, @SOURCES)
+			# Array of Strings, paths of directories containing header files to copy into mosync_include/@HEADER_INSTALLDIR/basename(d).
+			default(:HEADER_FLAT_DIRS, [])
+			# Array of Strings, paths of directories containing header files to copy into mosync_include/@HEADER_INSTALLDIR.
+			default(:HEADER_MERGE_DIRS, [])
 			# String, name of subdirectory of mosync_include, where header files will be installed. Required if @HEADER_DIRS is not empty.
 			default(:HEADER_INSTALLDIR, nil)
+			# Array of Strings, name patterns of header files. Only files matching one of these patterns will be copied.
+			default(:HEADER_FILE_PATTERNS, ['*.h', '*.hpp'])
 			# String, GCC flags describing the default include directories.
 			default(:DEFAULT_INCLUDES, " -I\"#{mosync_include}\"")
 
@@ -37,13 +44,26 @@ class MoSyncLib < LibWork
 			@EXTRA_CPPFLAGS ||= ''
 			@EXTRA_CPPFLAGS += @DEFAULT_INCLUDES
 
-			if(!@HEADER_DIRS.empty?)
+			if(!(@HEADER_DIRS.empty? && @HEADER_FLAT_DIRS.empty? && @HEADER_MERGE_DIRS.empty?))
 				need(:@HEADER_INSTALLDIR)
 				@REQUIREMENTS ||= []
-				endings = ['*.h', '*.hpp']
+				patterns = @HEADER_FILE_PATTERNS
 				@HEADER_DIRS.each do |name|
-					endings.each do |e|
+					#puts "HEADER_DIR #{name}"
+					patterns.each do |e|
 						@REQUIREMENTS << CopyDirTask.new(mosync_include + '/' + @HEADER_INSTALLDIR, name, name, false, e)
+					end
+				end
+				@HEADER_FLAT_DIRS.each do |name|
+					#puts "HEADER_FLAT_DIR #{name}"
+					patterns.each do |e|
+						@REQUIREMENTS << CopyDirTask.new(mosync_include + '/' + @HEADER_INSTALLDIR, File.basename(name), name, false, e)
+					end
+				end
+				@HEADER_MERGE_DIRS.each do |name|
+					#puts "HEADER_MERGE_DIR #{name}"
+					patterns.each do |e|
+						@REQUIREMENTS << CopyDirTask.new(mosync_include, @HEADER_INSTALLDIR, name, false, e)
 					end
 				end
 			end

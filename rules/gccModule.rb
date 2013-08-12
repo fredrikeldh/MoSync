@@ -122,6 +122,11 @@ public
 	end
 
 	def postCompile
+		if(!File.exist?(@TEMPDEPFILE) && @SOURCE.to_s.getExt == '.s')
+			# Some .s files generate no dependency file when compiled.
+			FileUtils.touch(@DEPFILE)
+			return
+		end
 		# In certain rare cases (error during preprocess caused by a header file)
 		# gcc may output an empty dependency file, resulting in an empty dependency list for
 		# the object file, which means it will not be recompiled, even though it should be.
@@ -129,15 +134,30 @@ public
 		FileUtils.mv(@TEMPDEPFILE, @DEPFILE)
 	end
 
+	private
+	def objectFlags
+		"\"#{@object_tasks.join("\" \"")}\""
+	end
+	def objectsFileName
+		CCompileTask.genFilename(@BUILDDIR, @NAME, '.objects')
+	end
+
+	public
+	def preLink
+		file = open(objectsFileName, 'w')
+		file.puts objectFlags
+		file.close
+	end
+
 	def linkCmd
 		linkerName = @cppfiles.empty? ? 'gcc' : 'g++'
-		flags = @EXTRA_LINKFLAGS
+		flags = "#{@FLAGS}#{@EXTRA_LINKFLAGS}"
 		@LIBRARIES.each do |lib|
 			flags += " -l#{lib}"
 		end
 		raise hell if(@LIBRARIES.uniq.length != @LIBRARIES.length)
 		raise hell if(@object_tasks.uniq.length != @object_tasks.length)
-		return "#{linkerName} -o \"#{@NAME}\"#{@FLAGS} \"#{@object_tasks.join("\" \"")}\"#{flags}"
+		return "#{linkerName} -o \"#{@NAME}\" @#{objectsFileName}#{flags}"
 	end
 
 	def dllCmd
@@ -150,13 +170,14 @@ public
 	end
 
 	def preLib
+		preLink
 		# ar does not remove out-of-date archive members.
 		# The file must be deleted if we are to get a clean build.
 		FileUtils.rm_f(@NAME)
 	end
 
 	def libCmd
-		return "ar rcs #{@NAME} #{@FLAGS} \"#{@object_tasks.join("\" \"")}\""
+		return "ar rcs #{@NAME}#{@FLAGS} @#{objectsFileName}"
 	end
 
 	def postLib

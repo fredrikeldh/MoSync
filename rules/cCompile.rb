@@ -238,14 +238,10 @@ class CCompileWork < FileTask
 		end
 	end
 
-	def cFlags
-		return @cFlags if(@cFlags)
-		return @cFlags = linkCmd
-	end
-
 	def fileExecute
 		execFlags
-		sh cFlags
+		preLink
+		sh linkCmd
 		postLink
 	end
 

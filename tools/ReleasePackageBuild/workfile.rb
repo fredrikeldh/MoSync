@@ -1,5 +1,7 @@
 
 require File.expand_path('../../rules/dynlibconv.rb')
+require File.expand_path('../../rules/work.rb')
+require File.expand_path('../../rules/mosync.rb')
 
 # Create and populate default_etc.
 D = DirTask.new(mosyncdir+'/bin/default_etc')
