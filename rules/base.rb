@@ -168,13 +168,15 @@ class Works
 		return if(!doGoals)
 		# copy to local, in case a goal calls invoke_subdir.
 		goals = @@goals
-		targets = @@targets
+		targets = @@default_targets.merge(@@targets)
 		d = targets[:default]
 		goals.each do |g|
+			raise "Goal #{g} is not a target in the current workfile!" if(!targets[g])
 			puts "Goal '#{g}':"
 			@@goalsDone = true
 			targets[g].execute
 		end
+		# why copy again?
 		d = targets[:default]
 		if(goals.empty? && d)
 			@@goalsDone = true
@@ -188,11 +190,13 @@ class Works
 	@@args = ARGV
 	@@goals = []
 	@@targets = {}
+	@@default_targets = {}
 	@@goalsDone = false
 
 	def self.resetTargets(args)
 		@@goals = []
 		@@targets = {}
+		@@default_targets = {}
 		@@goalsDone = false
 		@@args = args
 		@@handlers = {}
@@ -202,8 +206,9 @@ class Works
 	end
 
 	def self.run2()
-		return if(@@error)
-		return if(@@tasks.empty?)
+		#puts "run2: #{@@tasks.inspect}"
+		return false if(@@error)
+		return false if(@@tasks.empty?)
 
 		puts "starting multi-processing..."
 
@@ -260,6 +265,12 @@ class Works
 		else
 			key = task
 		end
+
+		#puts "Works.add(#{key}): #{task.needed}"
+		#task.prerequisites.each do |pre|
+		#	puts "#{pre.name}: #{pre.needed}"
+		#end
+
 		t = @@taskSet[key]
 		if(t == nil)
 			@@taskSet[key] = task
@@ -289,13 +300,14 @@ class Works
 		else
 			task.neededCount = count
 		end
+		#p @@tasks
 	end
 
 	def self.parseArgs(doGoals = false)
 		#p args
 		raise hell if(@@args_handled)
+		@@args_handled = {}
 		@@args.each do |a| handle_arg(a, doGoals) end
-		@@args_handled = true
 		@@args_default.each do |sym, val|
 			default_const(sym, val)
 		end
@@ -330,6 +342,10 @@ class Works
 		end
 		#puts "Target add '#{name}'"
 		@@targets.store(name, Target.new(name, preqs, &block))
+	end
+
+	def self.setDefaultTarget(name, &block)
+		@@default_targets.store(name, Target.new(name, [], &block))
 	end
 
 	private
@@ -408,6 +424,7 @@ class Works
 			end
 			puts "#{task.needed} #{task}"
 			task.execute
+			task.instance_variable_set(:@needed, false)	# I hope this works
 			#puts "done"
 			@@mutex.synchronize do
 				if(task.needies)
@@ -434,9 +451,10 @@ class Works
 			if(@@handlers[name])
 				#puts "Handler #{name}"
 				value = a[i+1 .. -1]
+				@@args_handled[name] = value
 				@@handlers[name].call(value)
 			else
-				raise "Unhandled argument #{a}" unless(@@ignore_unhandled_args)
+				raise "Unhandled argument #{a}" unless(defined?(@@ignore_unhandled_args))
 			end
 		else
 			g = a.to_sym

@@ -2,8 +2,7 @@
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['.', 'Algorithms', 'Containers', 'Iterators', 'Strings', 'Utilities']
 	@EXTRA_INCLUDES = ["#{mosyncdir}/include/newlib/stlport"]
 	@EXTRA_CPPFLAGS = ' -Wno-missing-noreturn'
@@ -21,4 +20,4 @@ Targets.setup
 
 raise unless(USE_NEWLIB)
 
-work.invoke
+Works.run

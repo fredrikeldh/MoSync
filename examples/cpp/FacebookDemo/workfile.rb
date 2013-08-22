@@ -2,8 +2,7 @@
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['.', 'GUI', 'Application']
 	#@EXTRA_CPPFLAGS = " -Wno-shadow"
 	@LIBRARIES = ['mautil', 'maui', 'Facebook', 'yajl', 'nativeui']
@@ -11,4 +10,4 @@ work.instance_eval do
 	@NAME = 'FacebookDemo'
 end
 
-work.invoke
+Works.run

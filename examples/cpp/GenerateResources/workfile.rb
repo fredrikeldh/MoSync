@@ -83,7 +83,7 @@ end
 
 # Define command-line targets.
 target :default do
-	@work.invoke
+	@Works.run
 end
 
 target :lst do

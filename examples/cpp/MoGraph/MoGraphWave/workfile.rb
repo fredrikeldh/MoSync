@@ -4,8 +4,7 @@ require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
 raise unless(HAVE_LIBC)
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ["."]
 	@EXTRA_INCLUDES = ["#{mosync_include}/glm", "#{mosync_include}/MoGraph"]
 	@EXTRA_CPPFLAGS = ' -Wno-float-equal -Wno-unreachable-code -Wno-shadow -Wno-missing-noreturn'
@@ -15,4 +14,4 @@ work.instance_eval do
 	@NAME = "MoGraphWave"
 end
 
-work.invoke
+Works.run

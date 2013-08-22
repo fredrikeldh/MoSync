@@ -4,8 +4,7 @@ require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
 raise unless(HAVE_LIBC)
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['.', 'UIFramework']
 	@EXTRA_CPPFLAGS = ' -Wno-shadow -Wno-float-equal'
 	@LSTFILES = ['res/res.lst']
@@ -14,4 +13,4 @@ work.instance_eval do
 	@NAME = 'Graphun'
 end
 
-work.invoke
+Works.run

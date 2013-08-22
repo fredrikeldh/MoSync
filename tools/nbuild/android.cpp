@@ -197,7 +197,7 @@ string toMakefileFile(string file) {
 		// if no colon we assume the path is relative
 		string device = result.substr(0, ixColon);
 		transform(device.begin(), device.end(), device.begin(), ::tolower);
-		result = "/cygdrive/" + device + result.substr(ixColon + 1);
+		result = "/" + device + result.substr(ixColon + 1);
 	}
 	toSlashes(result);
 	return result;

@@ -3,8 +3,7 @@
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_resources.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['.']
 	@PREREQUISITES = [BundleTask.new(self, './Resources/LocalFiles.bin', './LocalFiles')]
 	@LSTFILES = ['Resources/Resources.lst']
@@ -13,4 +12,4 @@ work.instance_eval do
 	@NAME = 'WebViewLoveSMSOldP'
 end
 
-work.invoke
+Works.run

@@ -136,10 +136,13 @@ public
 
 	private
 	def objectFlags
-		"\"#{@object_tasks.join("\" \"")}\""
+		"\"#{@object_tasks.join("\"\n\"")}\""
 	end
 	def objectsFileName
 		CCompileTask.genFilename(@BUILDDIR, @NAME, '.objects')
+	end
+	def linkerName
+		@cppfiles.empty? ? 'gcc' : 'g++'
 	end
 
 	public
@@ -150,7 +153,6 @@ public
 	end
 
 	def linkCmd
-		linkerName = @cppfiles.empty? ? 'gcc' : 'g++'
 		flags = "#{@FLAGS}#{@EXTRA_LINKFLAGS}"
 		@LIBRARIES.each do |lib|
 			flags += " -l#{lib}"

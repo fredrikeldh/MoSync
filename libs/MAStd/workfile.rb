@@ -60,7 +60,6 @@ MoSyncLib.new do
 	@SPECIFIC_CFLAGS = @pipe_specific_cflags
 
 	if(USE_GNU_BINUTILS)
-		@COLLECT_S_FILES = false
 		@IGNORED_FILES << 'e_pow.c'
 		@IGNORED_FILES << 'e_log.c'
 		@IGNORED_FILES << 'e_atan2.c'

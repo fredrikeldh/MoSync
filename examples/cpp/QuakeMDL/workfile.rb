@@ -2,8 +2,7 @@
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['src', 'src/endian']
 	@EXTRA_INCLUDES = ['inc', '.']
 	@LSTFILES = ['resources.lst']
@@ -21,4 +20,4 @@ work.instance_eval do
 	}
 end
 
-work.invoke
+Works.run

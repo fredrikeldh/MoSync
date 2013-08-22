@@ -160,17 +160,9 @@ class CCompileWork < FileTask
 		default(:prerequisites, [])
 	end
 
-	def initialize(compilerModule = DefaultCCompilerModule, &block)
-		@compilerModule = compilerModule
-		extend compilerModule
-		setCompilerVersion # needed by some blocks
-
-		@CONFIG = @@CONFIG if(defined?(@@CONFIG))
-		# String. 'release' or 'debug'.
-		default(:CONFIG, CONFIG_CCOMPILE_DEFAULT)
-
-		instance_eval(&block) if(block)
-
+	def checkSources
+		return if(@sourcesChecked)
+		@sourcesChecked = true
 		# Make source file variables are valid.
 		sources = [:@SOURCES, :@SOURCE_FILES, :@SOURCE_TASKS, :@EXTRA_OBJECTS]
 		haveSource = false
@@ -183,6 +175,20 @@ class CCompileWork < FileTask
 			err = "Need #{sources[0..-1].join(', ')} or #{sources.last}."
 			raise err
 		end
+	end
+
+	def initialize(compilerModule = DefaultCCompilerModule, &block)
+		@compilerModule = compilerModule
+		extend compilerModule
+		setCompilerVersion # needed by some blocks
+
+		@CONFIG = @@CONFIG if(defined?(@@CONFIG))
+		# String. 'release' or 'debug'.
+		default(:CONFIG, CONFIG_CCOMPILE_DEFAULT)
+
+		instance_eval(&block) if(block)
+
+		checkSources
 
 		need(:@NAME)
 

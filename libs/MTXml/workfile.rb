@@ -3,7 +3,7 @@
 require File.expand_path('../../rules/mosync_lib.rb')
 
 MoSyncLib.new do
-	entities = FileTask.new('entities.c') do
+	entities = FileTask.new('build/entities.c') do
 		@prerequisites << FileTask.new('entities.txt')
 	end
 	entities.instance_eval do
@@ -19,11 +19,11 @@ MoSyncLib.new do
 	end
 
 	@SOURCES = ["."]
-	@IGNORED_FILES = ['entities.c']
+	@SOURCE_TASKS = [entities]
 	@IGNORED_HEADERS = ['entities.h']
 	@EXTRA_SOURCETASKS = [entities]
 	@SPECIFIC_CFLAGS = {"MTXml.cpp" => " -Wno-unreachable-code",
-		"entities.c" => " -Wno-extra",
+		"entities.c" => " -Wno-extra -I.",
 	}
 	@HEADER_INSTALLDIR = "MTXml"
 	@NAME = "mtxml"

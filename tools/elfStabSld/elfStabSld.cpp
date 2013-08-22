@@ -293,7 +293,7 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 	size_t fileNum = -1;
 	Function f;
 	f.name = NULL;
-	f.info = "";
+	f.info = NULL;
 	f.scope = fileNum;
 	f.start = 0;
 	for(size_t i=0; i<data.stabs.size(); ) {
@@ -412,18 +412,26 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 #endif
 			// MoSync custom stab: function return & parameter info.
 			if(s.n_type == N_MOSYNC) {
-				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
-					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 				const char* stab = stabstr + s.n_strx;
+				//printf("0x%" PRIxPTR ": strx: 0x%08x (%s) type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+					//i, s.n_strx, stab, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 				switch(s.n_other) {
 				case 0:	// function info
-#if 0
-				if(f.info != NULL) {
+					if(f.name == NULL)
+						break;
+					DEBUG_ASSERT(f.name != NULL);
+#if 1
+					if(stab[0] == 0) {
+						printf("0x%" PRIxPTR ": strx: 0x%08x (%s) type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+							i, s.n_strx, stab, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
+						DEBIG_PHAT_ERROR;
+					}
+					if(f.info != NULL) {
 						// weak functions (like inline class methods) may have duplicate implementations.
 						// the code is removed, but the stabs are not.
 						// ensure that the info is identical before accepting a dupe.
 						if(strcmp(f.info, stab) != 0) {
-							printf("Duplicate info mismatch. Old: %s  New: %s\n", f.info, stab);
+							printf("Duplicate info mismatch. Old: '%s' New: '%s'\n", f.info, stab);
 #if 1
 						printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
 							i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
@@ -436,7 +444,6 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 					}
 #else
 					DEBUG_ASSERT(f.info == NULL);
-					DEBUG_ASSERT(f.name != NULL);
 #endif
 					f.info = stab;
 					//printf("info: %s\n", f.info);

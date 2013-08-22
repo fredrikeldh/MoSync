@@ -5,7 +5,7 @@ require "#{File.dirname(__FILE__)}/base.rb"
 class FileTask < Task
 	def initialize(n)
 		#puts "FileTask(#{n})"
-		@backtrace = Thread.current.backtrace
+		@backtrace = Thread.current.backtrace if(CONFIG_PRINT_FILETASK_BACKTRACE)
 		setName(n)
 		super()
 	end
@@ -63,6 +63,7 @@ class FileTask < Task
 
 private
 
+	# Must be called before setNeeded().
 	def setName(n)
 		@NAME = n.to_s
 		# names may not contain '~', the unix home directory hack, because Ruby doesn't parse it.

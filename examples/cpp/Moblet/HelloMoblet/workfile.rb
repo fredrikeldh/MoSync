@@ -2,11 +2,10 @@
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ["."]
 	@LIBRARIES = ["mautil"]
 	@NAME = "HelloMoblet"
 end
 
-work.invoke
+Works.run

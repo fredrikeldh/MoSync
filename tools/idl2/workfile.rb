@@ -30,6 +30,8 @@ end
 target :compile => :default do
 	begin
 		ct = CompileTask.new
+		# fails if idl2.exe needs to be regenerated, because at the time of task instantiation, the prereq is still needed,
+		# but at the time of run (which is essentially the same time), the prereq has already been executed, so it won't call the needy task.
 		Works.run(false)
 	rescue => e
 		# if the compiler should fail, we must make sure it runs next time.

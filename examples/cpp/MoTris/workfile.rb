@@ -2,8 +2,7 @@
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ["."]
 	@EXTRA_CPPFLAGS = " -Wno-shadow"
 	@LSTFILES = ["Res/res.lst"]
@@ -12,4 +11,4 @@ work.instance_eval do
 	@PACK_PARAMETERS = ' --s60v3uid E3450F2C --s60v2uid 00297B7B'
 end
 
-work.invoke
+Works.run

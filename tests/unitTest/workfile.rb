@@ -2,8 +2,7 @@
 
 require File.expand_path('../../rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = [".", "Libs/MAUtil/automated_tests", "Libs/MAStd/automated_tests"]
 	@EXTRA_INCLUDES = ["."]
 	@EXTRA_CPPFLAGS = " -Wno-shadow"
@@ -13,4 +12,4 @@ work.instance_eval do
 	@PACK_PARAMETERS = ' --permissions "Bluetooth,Calendar,Camera,Contacts,File Storage,Internet Access,Location,Power Management,SMS,Vibrate"'
 end
 
-work.invoke
+Works.run

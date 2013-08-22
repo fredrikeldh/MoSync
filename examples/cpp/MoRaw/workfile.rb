@@ -2,8 +2,7 @@
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['.']
 	@EXTRA_CPPFLAGS = ' -Wno-strict-aliasing -Wno-missing-format-attribute'
 	@LIBRARIES = ['mafs', 'mautil']
@@ -11,4 +10,4 @@ work.instance_eval do
 	@NAME = 'moRaw'
 end
 
-work.invoke
+Works.run

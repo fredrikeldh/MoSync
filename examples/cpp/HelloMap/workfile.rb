@@ -2,8 +2,7 @@
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ["."]
 	@LSTFILES = ["Res/res.lst"]
 	@LIBRARIES = ["mautil", "map", "maui"]
@@ -11,4 +10,4 @@ work.instance_eval do
 	@NAME = "HelloMap"
 end
 
-work.invoke
+Works.run

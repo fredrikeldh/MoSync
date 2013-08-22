@@ -2,8 +2,7 @@
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = ['.', 'Screens']
 	@EXTRA_INCLUDES = ['.']
 	@LIBRARIES = ['mautil', 'nativeui']
@@ -12,4 +11,4 @@ work.instance_eval do
 	@NAME = 'CameraDemo'
 end
 
-work.invoke
+Works.run

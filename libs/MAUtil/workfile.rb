@@ -4,7 +4,7 @@ require File.expand_path('../../rules/mosync_lib.rb')
 
 MoSyncLib.new do
 	@SOURCES = ["."]
-	@EXTRA_SOURCEFILES = ["../kazlib/dict.c", "../kazlib/hash.c"]
+	@SOURCE_FILES = ["../kazlib/dict.c", "../kazlib/hash.c"]
 	@EXTRA_INCLUDES = ['..']
 	@HEADER_DIRS = [
 		'../kazlib',
@@ -31,8 +31,8 @@ MoSyncLib.new do
 		raise hell if(@CONFIG != 'debug')
 		@SPECIFIC_CFLAGS = {}
 	end
-	@SPECIFIC_CFLAGS["dict.c"] = " -Wno-unreachable-code"
-	@SPECIFIC_CFLAGS["hash.c"] = " -Wno-unreachable-code"
+	@SPECIFIC_CFLAGS["dict.c"] = " -Wno-unreachable-code -Wno-c++-compat"
+	@SPECIFIC_CFLAGS["hash.c"] = " -Wno-unreachable-code -Wno-c++-compat"
 end
 
 Works.run

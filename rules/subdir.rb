@@ -21,8 +21,8 @@ class Works
 		if(CONFIG_SUBDIR_RELOAD || reload)
 			args = args.join(' ')
 			@@handlers.each do |name, proc|
-				if(const_defined?(name))
-					args << " #{name}=\"#{const_get(name)}\""
+				if(@@args_handled[name])
+					args << " #{name}=\"#{@@args_handled[name]}\""
 				end
 			end
 			cmd = "#{File.expand_path(workfileName)} #{args}"

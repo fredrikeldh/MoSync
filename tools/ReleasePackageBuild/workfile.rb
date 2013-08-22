@@ -64,3 +64,5 @@ end
 
 # Copy platforms.
 CopyDirTask.new(mosyncdir, 'profiles/platforms', '../../platforms')
+
+Works.run
