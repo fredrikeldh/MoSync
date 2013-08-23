@@ -1447,11 +1447,9 @@ namespace Base
 
 		// Bluetooth syscalls
 
-		// int maBtStartDeviceDiscovery(int names)
 		case maIOCtl_maBtStartDeviceDiscovery:
-			//__android_log_write(ANDROID_LOG_INFO, "MoSync Syscall", "maIOCtl_maBtStartDeviceDiscovery");
 			SYSLOG("maIOCtl_maBtStartDeviceDiscovery");
-			return _maBtStartDeviceDiscovery(a, mJNIEnv, mJThis);
+			return _maBtStartDeviceDiscovery(a, b, mJNIEnv, mJThis);
 
 		// int maBtGetNewDevice(MABtDevice* d)
 		case maIOCtl_maBtGetNewDevice:

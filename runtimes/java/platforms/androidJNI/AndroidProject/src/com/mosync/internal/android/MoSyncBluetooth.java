@@ -75,6 +75,7 @@ import static com.mosync.internal.generated.MAAPI_consts.CONNERR_CANCELED;
 import static com.mosync.internal.generated.MAAPI_consts.CONNERR_GENERIC;
 import static com.mosync.internal.generated.MAAPI_consts.CONNERR_UNAVAILABLE;
 import static com.mosync.internal.generated.MAAPI_consts.EVENT_TYPE_BT;
+import static com.mosync.internal.generated.MAAPI_consts.MA_BTDD_LOW_ENERGY;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -146,6 +147,8 @@ public class MoSyncBluetooth
 	 */
 	BluetoothDeviceDiscoveryThread mBluetoothDeviceDiscoveryThread = null;
 
+	boolean mBleAvailable = false;
+
 	/**
 	 * Constructor.
 	 * @param thread The MoSync thread.
@@ -153,6 +156,8 @@ public class MoSyncBluetooth
 	public MoSyncBluetooth(MoSyncThread thread)
 	{
 		mMoSyncThread = thread;
+		mBleAvailable = mMoSyncThread.getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+
 		registerBluetoothReceiver();
 	}
 
@@ -231,7 +236,7 @@ public class MoSyncBluetooth
 	 * @param names Not used on Android.
 	 * @return 0 on success, < 0 on failure.
 	 */
-	int maBtStartDeviceDiscovery(int names)
+	int maBtStartDeviceDiscovery(int names, int flags)
 	{
 		panicIfBluetoothPermissionsAreNotSet();
 
@@ -263,7 +268,7 @@ public class MoSyncBluetooth
 		mBluetoothDeviceAddressSet = new ConcurrentHashMap<String, Boolean>();
 
 		// Create and start device discovery thread.
-		mBluetoothDeviceDiscoveryThread = new BluetoothDeviceDiscoveryThread();
+		mBluetoothDeviceDiscoveryThread = new BluetoothDeviceDiscoveryThread(flags);
 		mBluetoothDeviceDiscoveryThread.start();
 
 		return 0; // Zero means success.
@@ -863,13 +868,15 @@ public class MoSyncBluetooth
 	/**
 	 * Thread that performs discovery of Bluetooth devices.
 	 */
-	class BluetoothDeviceDiscoveryThread extends Thread
+	class BluetoothDeviceDiscoveryThread extends Thread implements BluetoothAdapter.LeScanCallback
 	{
 		Looper mLooper;
 		BroadcastReceiver mBluetoothReciever;
+		int mFlags;
 
-		public BluetoothDeviceDiscoveryThread()
+		public BluetoothDeviceDiscoveryThread(int flags)
 		{
+			mFlags = flags;
 		}
 
 		public void run()
@@ -891,7 +898,11 @@ public class MoSyncBluetooth
 				Looper.prepare();
 				mLooper = Looper.myLooper();
 
-				startDeviceDiscovery();
+				if((mFlags & MA_BTDD_LOW_ENERGY) != 0) {
+					startLeDiscovery();
+				} else {
+					startDeviceDiscovery();
+				}
 
 				Looper.loop();
 			}
@@ -901,11 +912,41 @@ public class MoSyncBluetooth
 				e.printStackTrace();
 
 				// Stop device discovery.
-				stopDeviceDiscovery();
+				if((mFlags & MA_BTDD_LOW_ENERGY) != 0) {
+					stopLeDiscovery();
+				} else {
+					stopDeviceDiscovery();
+				}
 
 				// Is this the right thing to post?
 				btPostBluetoothMessage(CONNERR_GENERIC);
 			}
+		}
+
+		// 10 seconds.
+		private static final long SCAN_PERIOD = 10000;
+
+		void startLeDiscovery() {
+			final BluetoothAdapter adapter = getBluetoothAdapter();
+			new Handler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					stopLeDiscovery();
+				}
+			}, SCAN_PERIOD);
+
+			adapter.startLeScan(this);
+		}
+
+		void stopLeDiscovery() {
+			getBluetoothAdapter().stopLeScan(this);
+			deviceDiscoveryFinished();
+		}
+
+		@Override
+		public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
+			Log.i("BluetoothDeviceDiscoveryThread", "*** Found device, rssi " + rssi);
+			deviceFound(device);
 		}
 
 		void startDeviceDiscovery()

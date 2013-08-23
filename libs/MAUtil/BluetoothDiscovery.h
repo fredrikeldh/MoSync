@@ -16,7 +16,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 */
 
 /** \file BluetoothDiscovery.h
-* 
+*
 * \brief Environment-based classes for Bluetooth asynchronous device and service discovery.
 *
 * Only one operation may be active at a time.
@@ -124,12 +124,13 @@ namespace MAUtil {
 		* \param names If true, the operation will fetch the names of the remote devices.
 		* This will take extra time. If false, names will not be fetched, speeding up the
 		* operation.
+		* \param flags Zero or more of the  \link #MA_BTDD_LOW_ENERGY MA_BTDD \endlink flags.
 		*
 		* \returns Zero, if the operation started successfully.
 		* Less than zero, if the operation failed. In that case,
 		* the operation is considered complete and another may be attempted.
 		*/
-		int startDeviceDiscovery(BluetoothDeviceDiscoveryListener* listener, bool names);
+		int startDeviceDiscovery(BluetoothDeviceDiscoveryListener* listener, bool names, int flags = 0);
 
 		/**
 		* Starts a service discovery operation.

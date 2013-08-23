@@ -95,16 +95,16 @@ namespace Base
 		return returnValue;
 	}
 
-	int _maBtStartDeviceDiscovery(int names, JNIEnv* jNIEnv, jobject jThis)
+	int _maBtStartDeviceDiscovery(int names, int flags, JNIEnv* jNIEnv, jobject jThis)
 	{
 		//__android_log_write(ANDROID_LOG_INFO, "JNI Syscalls", "_maBtStartDeviceDiscovery begin");
 
 		jclass cls = jNIEnv->GetObjectClass(jThis);
-		jmethodID methodID = jNIEnv->GetMethodID(cls, "maBtStartDeviceDiscovery", "(I)I");
+		jmethodID methodID = jNIEnv->GetMethodID(cls, "maBtStartDeviceDiscovery", "(II)I");
 
 		jint ret = -1;
 		if (methodID != 0)
-			ret = jNIEnv->CallIntMethod(jThis, methodID, names);
+			ret = jNIEnv->CallIntMethod(jThis, methodID, names, flags);
 
 		jNIEnv->DeleteLocalRef(cls);
 

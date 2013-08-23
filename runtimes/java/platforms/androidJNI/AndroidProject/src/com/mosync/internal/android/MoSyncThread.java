@@ -4228,11 +4228,11 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	}
 
 
-	int maBtStartDeviceDiscovery(int names)
+	int maBtStartDeviceDiscovery(int names, int flags)
 	{
 		if (isBluetoothApiAvailable())
 		{
-			return mMoSyncBluetooth.maBtStartDeviceDiscovery(names);
+			return mMoSyncBluetooth.maBtStartDeviceDiscovery(names, flags);
 		}
 		else
 		{

@@ -2348,11 +2348,19 @@ interface MAAPI {
 			MAUUID* uuids;
 		}
 
+		// Flags for maBtStartDeviceDiscovery().
+		constset int MA_BTDD_ {
+			/// Search for Low Energy devices instead of ordinary ones.
+			LOW_ENERGY = 1;
+		}
+
 		/**
 		* Starts a device discovery operation.
 		*
 		* \param names Set this to non-zero to retrieve the names of remote devices.
 		* This takes extra time, so set it to zero for faster scanning.
+		*
+		* \param flags Zero or more of the  \link #MA_BTDD_LOW_ENERGY MA_BTDD \endlink flags.
 		*
 		* \note On Windows, due to a bug in the Microsoft Bluetooth stack,
 		* newly discovered devices may appear without names.
@@ -2365,7 +2373,7 @@ interface MAAPI {
 		* \see maBtCancelDiscovery
 		* \see EVENT_TYPE_BT
 		*/
-		int maBtStartDeviceDiscovery(in int names);
+		int maBtStartDeviceDiscovery(in int names, in int flags);
 
 		/**
 		* Fills an MABtDevice structure with information about a device.

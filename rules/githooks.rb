@@ -30,12 +30,16 @@ def enforceGithooks
 	target = '.git/hooks'
 	source = 'githooks'
 	backup = '.git/hooks.bak'
-	if(!File.exist?('.git'))
-		puts '.git not found.'
+	ensureDirectoryLink('Hook', '.git', target, source, backup)
+end
+
+def ensureDirectoryLink(name, root, target, source, backup)
+	if(!File.exist?(root))
+		puts "#{root} not found."
 		return
 	end
 	if(dirsAreEqual?(target, source))
-		puts 'Hook directories are equal.'
+		puts "#{name} directories are equal."
 		return
 	end
 	if(File.exist?(target))

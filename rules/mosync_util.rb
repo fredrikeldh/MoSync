@@ -33,7 +33,7 @@ def mosyncdir
 end
 
 def getMosyncVersion
-	open(mosyncdir + '/bin/version.dat') do |vdat|
+	open(mosyncdir + '/bin/version.dat', 'r') do |vdat|
 		return vdat.lines.to_a[2].strip
 	end
 rescue Exception => e
@@ -42,7 +42,7 @@ rescue Exception => e
 end
 
 def getMosyncVersionDat
-	open(mosyncdir + '/bin/version.dat') do |vdat|
+	open(mosyncdir + '/bin/version.dat', 'r') do |vdat|
 		return vdat.lines.collect do |line|
 			line.strip
 		end

@@ -31,7 +31,7 @@ namespace Base
 
 	// Bluetooth API
 
-	int _maBtStartDeviceDiscovery(int names, JNIEnv* jNIEnv, jobject jThis);
+	int _maBtStartDeviceDiscovery(int names, int flags, JNIEnv* jNIEnv, jobject jThis);
 
 	int _maBtGetNewDevice(
 		int memStart,
