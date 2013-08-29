@@ -278,7 +278,7 @@ void packageAndroid(const SETTINGS& s, const RuntimeInfo& ri) {
 		}
 
 		// Copy the gdbserver thingy
-		if (isDebug) {
+		if(false) {//isDebug) {
 			string variantDirName = string("android_") + arch + (isDebug ? "_debug" : "_release");
 			string gdbServerDst = addlib + "/" + arch + "/gdbserver";
 			string gdbServerSrc = string(s.dst) + "/../" + variantDirName + "/gdbserver";

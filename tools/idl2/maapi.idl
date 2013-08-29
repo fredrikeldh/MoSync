@@ -2350,7 +2350,11 @@ interface MAAPI {
 
 		// Flags for maBtStartDeviceDiscovery().
 		constset int MA_BTDD_ {
-			/// Search for Low Energy devices instead of ordinary ones.
+			/** \brief Search for Low Energy devices instead of ordinary ones.
+			*
+			* \note Low Energy devices do not have services or ports.
+			* Instead, you must use the GATT API to talk to them.
+			*/
 			LOW_ENERGY = 1;
 		}
 
@@ -2444,6 +2448,10 @@ interface MAAPI {
 		int maBtCancelDiscovery();
 
 		/**@}*/
+
+group GATTAPI "GATT API" {
+#include "Modules/gatt.idl"
+}
 
 #if IX_WLAN
 		constset int WLAN_ADDR_ {
@@ -2856,7 +2864,7 @@ interface MAAPI {
 		* OR'd with one of the \link #MA_FL_ORDER_ASCENDING MA_FL_ORDER \endlink flags.
 		* #MA_FL_SORT_NONE must not be combined with an
 		* \link #MA_FL_ORDER_ASCENDING MA_FL_ORDER \endlink flag.
-		* \note Sorting is not supported on JavaME. If it is attempted,
+		* \note Sorting is not supported on JavaME or Android. If it is attempted,
 		* this function will fail with #MA_FERR_SORTING_UNSUPPORTED.
 		*
 		* \returns A File Listing handle, or \< 0 on error.

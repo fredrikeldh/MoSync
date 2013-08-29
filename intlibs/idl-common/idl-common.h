@@ -136,6 +136,12 @@ typedef unsigned int uint32;
 typedef unsigned short uint16;
 typedef unsigned char uint8;
 
+enum OutputType {
+	otC,
+	otJava,
+	otJni,
+};
+
 #define MAIN_INTERFACE (-1)
 
 //doesn't set Interface.path
@@ -148,7 +154,8 @@ uint32 calculateChecksum(const Interface& inf);
 void streamHash(ostream& stream, const Interface& inf);
 
 void streamHeaderFile(ostream& stream, const Interface& inf, const vector<Ix>& ixs, int ix);
-void streamCppDefsFile(ostream& stream, const Interface& inf, const vector<Ix>& ixs, int ix);
+void streamCppDefsFile(ostream& stream, const Interface& inf, const vector<Ix>& ixs,
+	int ix, OutputType);
 void streamJavaDefinitionFile(
 	ostream& stream,
 	const string& className,
@@ -156,12 +163,14 @@ void streamJavaDefinitionFile(
 	int ix);
 
 void streamConstants(ostream& stream, const vector<ConstSet>& constSets, int ix);
-void streamIoctlDefines(ostream& stream, const Interface& ioctls, const string& headerName, int ix, bool java);
+void streamIoctlDefines(ostream& stream, const Interface& ioctls, const string& headerName,
+	int ix, OutputType);
 void streamIoctlFunction(ostream& stream, const Interface& inf, const Function& f,
 	const string& ioctlName, int fnOffset = 0);
 void streamIoctlFunction(ostream& stream, const Interface& inf, const Function& f,
 	const string& ioctlName, const string& fnName);
-void streamCppDefs(ostream& stream, const Interface& inf, int ix, const string& headerName);
+void streamCppDefs(ostream& stream, const Interface& inf, int ix, const string& headerName,
+	OutputType);
 
 void streamInvokeSyscall(ostream&, const Interface&, bool java, int argOffset = 0);
 void streamHeaderFunctions(ostream& stream, const Interface& inf, bool syscall);

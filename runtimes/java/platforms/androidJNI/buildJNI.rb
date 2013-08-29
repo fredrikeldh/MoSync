@@ -124,10 +124,12 @@ end
 
 debug = (debugFlag == nil) ? "" : "D"
 
-outdir = ".."
-if(configPath != nil && !extra)
-	outdir = configPath
+#if(debugFlag)
+#	FileUtils.copy_file "#{androidNDKPath}/prebuilt/android-arm/gdbserver/gdbserver",
+#end
 
+outdir = configPath
+if(configPath != nil && !extra)
 	# change name on the current config_platform.h to config_platform.h.saved
 
 	conf_file = File.join(mosyncppsource, "config_platform.h")
@@ -292,7 +294,7 @@ puts "Build Zip Package\n\n"
 cd "temp"
 
 if ENV['OS'] == "Windows_NT"
-	sh("#{ENV['MOSYNC_SRC']}/tools/ReleasePackageBuild/build_package_tools/mosync_bin/zip -r MoSyncRuntime#{debug}.zip .");
+	success = sh("#{ENV['MOSYNC_SRC']}/tools/ReleasePackageBuild/build_package_tools/mosync_bin/zip -r MoSyncRuntime#{debug}.zip .");
 else
 	success = sh("zip -r MoSyncRuntime#{debug}.zip .");
 end
@@ -300,7 +302,7 @@ if (!success)
 	exitBuilder(1, mosyncppsource, configPath)
 end
 
-FileUtils.copy_file( "MoSyncRuntime#{debug}.zip", File.join(outdir, "MoSyncRuntime#{debug}.zip"))
+FileUtils::Verbose.copy_file( "MoSyncRuntime#{debug}.zip", File.join(outdir, "MoSyncRuntime#{debug}.zip"))
 
 cd ".."
 

@@ -1,0 +1,104 @@
+// random note:
+// RSSI: signal strength, measured in decibel.
+// We get values from BLE devices ranging from -100 to -10; smaller absolute number means stronger signal.
+
+/** \group GATTAPI
+* BLE devices uses the GATT protocol to communicate.
+* A server device has one or more services.
+* Each service has a UUID, an instance id and a type.
+* Each service also has one or more Characteristics.
+* Each Characteristic has a UUID, an instance id and a byte-string value.
+* Each Characteristic also has zero or more Descriptors.
+* Each Descriptor has a UUID and a byte-string value.
+*
+* Normal usage involves connecting to a remote device,
+* opening a service with a known UUID,
+* reading and writing several known Characteristics.
+*
+* It is possible to register for notification of changes to a Characteristic.
+*/
+
+struct MAGattService {
+	MAUUID uuid;
+	int id;
+	int type;
+	MAHandle device;
+	int serviceIndex;
+}
+
+struct MAGattChar {
+	MAUUID uuid;
+	int id;
+	int permissions;
+	int property;
+	int writeType;
+	char* value;
+	int len;
+	MAHandle device;
+	int serviceIndex;
+	int charIndex;
+}
+
+struct MAGattDesc {
+	MAUUID uuid;
+	int permissions;
+	char* value;
+	int len;
+	MAHandle device;
+	int serviceIndex;
+	int charIndex;
+	int descIndex;
+}
+
+// async
+// Connects to a BLE device.
+// Returns a GATT MAHandle.
+// Once this operation is complete, maGattFetchServices() becomes operational.
+int maGattConnect(in MABtAddr address);
+
+// async
+// Fetches a list of services for a device.
+// Once this operation is completed, the following functions become operational:
+// maGattServiceCount(), maGattService(),
+// maGattCharCount(), maGattChar(),
+// maGattDescCount(), maGattDesc().
+int maGattFetchServices(in MAHandle device);
+
+int maGattServiceCount(in MAHandle device);
+// requires device and serviceIndex.
+int maGattService(out MAGattService service);
+
+int maGattCharCount(in MAGattService service);
+
+// requires device, serviceIndex and charIndex.
+// sets UUID, id, and flag members, but not len.
+int maGattChar(out MAGattChar c);
+
+int maGattDescCount(in MAGattChar c);
+// requires device, serviceIndex, charIndex and descIndex.
+// sets UUID, id, and permissions, but not len.
+int maGattDesc(out MAGattChar c);
+
+// async
+int maGattFetchRssi(in MAHandle device);
+
+// async
+// only uuid and id members are used.
+// len is set.
+// does not set any of the flag members.
+int maGattFetchChar(out MAGattChar c);
+int maGattFetchDesc(out MAGattDesc d);
+
+// instant.
+// requires value to be a buffer at least the \a length reported by maGattFetchChar().
+int maGattCharValue(out MAGattChar c);
+int maGattDescValue(out MAGattDesc d);
+
+// to update value, call Fetch*, then call *Value again.
+
+// async.
+int maGattCharWrite(in MAGattChar c);
+int maGattDescWrite(in MAGattDesc d);
+
+// instant?
+int maGattNotification(in MAGattChar c, in int enable);

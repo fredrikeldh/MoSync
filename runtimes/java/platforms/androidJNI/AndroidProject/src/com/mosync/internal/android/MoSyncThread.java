@@ -2786,7 +2786,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	}
 
 
-	int maExtensionFunctionInvoke(int function, int ptrs, int memstart) {
+	int maExtensionFunctionInvoke2(int function, int ptrs, int memstart) {
 		return maInvokeExtension(function, ptrs, memstart);
 	}
 
@@ -3694,18 +3694,15 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	 * Get info about for a given push notification.
 	 * @param handle The push notification handle.
 	 * @param type By default is 1.
-	 * @param allertMessage Address to buffer to receive the data.
-	 * The result is NOT zero terminated.
-	 * @param allertMessageSize Max size of the buffer.
 	 * @return  One of the next constants:
 	 *  - MA_NOTIFICATION_RES_OK
 	 *  - MA_NOTIFICATION_RES_INVALID_HANDLE
 	 *  - MA_NOTIFICATION_RES_INVALID_STRING_BUFFER_SIZE
 	 */
-	int maNotificationPushGetData(int handle, int allertMessage,
-			int allertMessageSize)
+	int maNotificationPushGetData(int handle, int data)
 	{
-		return mMoSyncNotifications.maNotificationPushGetData(handle, allertMessage, allertMessageSize);
+		IntBuffer ib = getMemorySlice(data, 6*4).asIntBuffer();
+		return mMoSyncNotifications.maNotificationPushGetData(handle, ib.get(1), ib.get(2));
 	}
 
 	/**
@@ -3894,9 +3891,10 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	* \param productID String that identifies the product. This string must be used by the
 	* App Store / Google Play to identify the product.
 	*/
-	void maPurchaseCreate(final int productHandle, final String productID)
+	int maPurchaseCreate(final int productHandle, final String productID)
 	{
 		mMoSyncPurchase.maPurchaseCreate(productHandle, productID);
+		return 0;
 	}
 
 	/**
@@ -3933,9 +3931,10 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	* \param quantity How many products to be purchased. Must be a value greater than zero.
 	* This param is ignored on Android, as any purchase request can handle only one item.
 	*/
-	void maPurchaseRequest(final int productHandle)
+	int maPurchaseRequest(final int productHandle, int quantity)
 	{
 		mMoSyncPurchase.maPurchaseRequest(productHandle);
+		return 0;
 	}
 
 	/**
@@ -3956,9 +3955,10 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	* \param productHandle Handle to the product that has been purchased.
 	* - #MA_PURCHASE_RES_PUBLIC_KEY_NOT_SET.
 	*/
-	void maPurchaseVerifyReceipt(final int productHandle)
+	int maPurchaseVerifyReceipt(final int productHandle)
 	{
 		mMoSyncPurchase.maPurchaseVerifyReceipt(productHandle);
+		return 0;
 	}
 
 	/**
@@ -4017,9 +4017,10 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	* will contain a handle to the new product. Make sure you destroy the product after done
 	* working with it.
 	*/
-	void maPurchaseRestoreTransactions()
+	int maPurchaseRestoreTransactions()
 	{
 		mMoSyncPurchase.maPurchaseRestoreTransactions();
+		return 0;
 	}
 
 	/**
@@ -4241,18 +4242,16 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	}
 
 	int maBtGetNewDevice(
-		int nameBufPointer,
-		int nameBufSize,
-		int actualNameLengthPointer,
-		int addressPointer)
+		int d)
 	{
 		if (isBluetoothApiAvailable())
 		{
+			IntBuffer ib = getMemorySlice(d, 4 * 3).asIntBuffer();
 			return mMoSyncBluetooth.maBtGetNewDevice(
-				nameBufPointer,
-				nameBufSize,
-				actualNameLengthPointer,
-				addressPointer);
+				ib.get(0),
+				ib.get(1),
+				ib.get(2),
+				d+12);
 		}
 		else
 		{
@@ -4442,13 +4441,14 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		return mMoSyncHomeScreen.maHomeScreenShortcutRemove(name);
 	}
 
-	/**
-	 * Turn on/off sending of HomeScreen events. Off by default.
-	 * @param eventsOn 1 = events on, 0 = events off
-	 */
-	int maHomeScreenEventsOnOff(int eventsOn)
+	int maHomeScreenEventsOn()
 	{
-		return mMoSyncHomeScreen.maHomeScreenEventsOnOff(eventsOn);
+		return mMoSyncHomeScreen.maHomeScreenEventsOnOff(1);
+	}
+
+	int maHomeScreenEventsOff()
+	{
+		return mMoSyncHomeScreen.maHomeScreenEventsOnOff(0);
 	}
 
 	/**
@@ -4946,10 +4946,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	public int maCameraPreviewEventEnable(
 			int eventType,
 			int previewBuffer,
-			int rectLeft,
-			int rectTop,
-			int rectWidth,
-			int rectHeight
+			int rect
 		)
 	{
 		if(mMoSyncCameraController == null)
@@ -4957,9 +4954,11 @@ public class MoSyncThread extends Thread implements MoSyncContext
 			return IOCTL_UNAVAILABLE;
 		}
 
+		IntBuffer ib = getMemorySlice(rect, 16).asIntBuffer();
+
 		int returnVal = mMoSyncCameraController.enablePreviewEvents(
-			eventType, previewBuffer, rectLeft, rectTop,
-			rectWidth, rectHeight);
+			eventType, previewBuffer, ib.get(0), ib.get(1),
+			ib.get(2), ib.get(3));
 
 		return returnVal;
 	}
@@ -5003,10 +5002,20 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	 * @return 0 on success, RES_BAD_INPUT if the handle does not exist,
 	 *         and -3 if the texture could not be loaded.
 	 */
-	public int loadGlTexture(final int bitmapHandle)
+	public int maOpenGLTexImage2D(final int bitmapHandle)
 	{
 		// Load texture as standard texture.
 		return loadGlTextureHelper(bitmapHandle, false);
+	}
+
+	int maScreenStateEventsOn()
+	{
+		return maScreenStateEventsOnOff(1);
+	}
+
+	int maScreenStateEventsOff()
+	{
+		return maScreenStateEventsOnOff(0);
 	}
 
 	/**
@@ -5061,7 +5070,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	 * @return 0 on success, RES_BAD_INPUT if the handle does not exist,
 	 *         and -3 if the texture could not be loaded.
 	 */
-	public int loadGlSubTexture(final int bitmapHandle)
+	public int maOpenGLTexSubImage2D(final int bitmapHandle)
 	{
 		// Load texture as sub texture.
 		return loadGlTextureHelper(bitmapHandle, true);
@@ -5287,7 +5296,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		return mMoSyncFile.maFileTotalSpace(file);
 	}
 
-	int maFileDate(int file)
+	long maFileDate(int file)
 	{
 		return mMoSyncFile.maFileDate(file);
 	}
@@ -5332,9 +5341,9 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		return mMoSyncFile.maFileSeek(file, offset, whence);
 	}
 
-	int maFileListStart(String path, String filter)
+	int maFileListStart(String path, String filter, int sorting)
 	{
-		return mMoSyncFile.maFileListStart(path, filter);
+		return mMoSyncFile.maFileListStart(path, filter, sorting);
 	}
 
 	int maFileListNext(int list, int nameBuf, int bufSize)
@@ -5420,14 +5429,16 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		return mMoSyncPIM.maPimItemGetAttributes(item, field, index);
 	}
 
-	int maPimItemSetLabel(int item, int field, int buffPointer, int buffSize, int index)
+	int maPimItemSetLabel(int args, int index)
 	{
-		return mMoSyncPIM.maPimItemSetLabel(item, field, buffPointer, buffSize, index);
+		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		return mMoSyncPIM.maPimItemSetLabel(ib.get(0), ib.get(1), ib.get(2), ib.get(3), index);
 	}
 
-	int maPimItemGetLabel(int item, int field, int buffPointer, int buffSize, int index)
+	int maPimItemGetLabel(int args, int index)
 	{
-		return mMoSyncPIM.maPimItemGetLabel(item, field, buffPointer, buffSize, index);
+		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		return mMoSyncPIM.maPimItemGetLabel(ib.get(0), ib.get(1), ib.get(2), ib.get(3), index);
 	}
 
 	int maPimFieldType(int list, int field)
@@ -5435,19 +5446,22 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		return mMoSyncPIM.maPimFieldType(list, field);
 	}
 
-	int maPimItemGetValue(int item, int field, int buffPointer, int buffSize, int index)
+	int maPimItemGetValue(int args, int index)
 	{
-		return mMoSyncPIM.maPimItemGetValue(item, field, buffPointer, buffSize, index);
+		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		return mMoSyncPIM.maPimItemGetValue(ib.get(0), ib.get(1), ib.get(2), ib.get(3), index);
 	}
 
-	int maPimItemSetValue(int item, int field, int buffPointer, int buffSize, int index, int attributes)
+	int maPimItemSetValue(int args, int index, int attributes)
 	{
-		return mMoSyncPIM.maPimItemSetValue(item, field, buffPointer, buffSize, index, attributes);
+		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		return mMoSyncPIM.maPimItemSetValue(ib.get(0), ib.get(1), ib.get(2), ib.get(3), index, attributes);
 	}
 
-	int maPimItemAddValue(int item, int field, int buffPointer, int buffSize, int attributes)
+	int maPimItemAddValue(int args, int attributes)
 	{
-		return mMoSyncPIM.maPimItemAddValue(item, field, buffPointer, buffSize, attributes);
+		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		return mMoSyncPIM.maPimItemAddValue(ib.get(0), ib.get(1), ib.get(2), ib.get(3), attributes);
 	}
 
 	int maPimItemRemoveValue(int item, int field, int index)
@@ -5474,20 +5488,22 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		return mMoSyncNFC == null ? MA_NFC_NOT_AVAILABLE : mMoSyncNFC.maNFCStart();
 	}
 
-	void maNFCStop() {
+	int maNFCStop() {
 		if (mMoSyncNFC != null) {
 			mMoSyncNFC.maNFCStop();
 		}
+		return 0;
 	}
 
 	int maNFCReadTag(int nfcContext) {
 		return mMoSyncNFC == null ? IOCTL_UNAVAILABLE : mMoSyncNFC.maNFCReadTag(nfcContext);
 	}
 
-	void maNFCDestroyTag(int tagHandle) {
+	int maNFCDestroyTag(int tagHandle) {
 		if (mMoSyncNFC != null) {
 			mMoSyncNFC.maNFCDestroyTag(tagHandle);
 		}
+		return 0;
 	}
 
 	int maNFCIsType(int tagHandle, int type) {
@@ -5502,20 +5518,22 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		return mMoSyncNFC == null ? IOCTL_UNAVAILABLE : mMoSyncNFC.maNFCBatchStart(nfcContext);
 	}
 
-	void maNFCBatchCommit(int nfcContext) {
+	int maNFCBatchCommit(int nfcContext) {
 		if (mMoSyncNFC != null) {
 			mMoSyncNFC.maNFCBatchCommit(nfcContext);
 		}
+		return 0;
 	}
 
-	void maNFCBatchRollback(int nfcContext) {
+	int maNFCBatchRollback(int nfcContext) {
 		if (mMoSyncNFC != null) {
 			mMoSyncNFC.maNFCBatchRollback(nfcContext);
 		}
+		return 0;
 	}
 
-	public int maNFCTransceive(int tagHandle, int src, int len, int dst, int dstLen, int dstPtr) {
-		return mMoSyncNFC == null ? IOCTL_UNAVAILABLE : mMoSyncNFC.maNFCTransceive(tagHandle, src, len, dst, dstLen, dstPtr);
+	public int maNFCTransceive(int tagHandle, int src, int len, int dst, int dstLen) {
+		return mMoSyncNFC == null ? IOCTL_UNAVAILABLE : mMoSyncNFC.maNFCTransceive(tagHandle, src, len, dst, dstLen, dst);
 	}
 
 	public int maNFCGetSize(int tagHandle) {
@@ -5526,16 +5544,18 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		return mMoSyncNFC == null ? IOCTL_UNAVAILABLE : mMoSyncNFC.maNFCGetId(tagHandle, dst, len);
 	}
 
-	void maNFCConnectTag(int tagHandle) {
+	int maNFCConnectTag(int tagHandle) {
 		if (mMoSyncNFC != null) {
 			mMoSyncNFC.maNFCConnectTag(tagHandle);
 		}
+		return 0;
 	}
 
-	void maNFCCloseTag(int tagHandle) {
+	int maNFCCloseTag(int tagHandle) {
 		if (mMoSyncNFC != null) {
 			mMoSyncNFC.maNFCCloseTag(tagHandle);
 		}
+		return 0;
 	}
 
 	int maNFCReadNDEFMessage(int tagHandle) {
