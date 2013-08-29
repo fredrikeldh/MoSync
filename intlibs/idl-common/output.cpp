@@ -291,26 +291,25 @@ void streamHeaderFunctions(ostream& stream, const Interface& inf, bool syscall) 
 	stream << "\n";
 }
 
-/**
- * Generate the content of a .java class file for the main MoSync API
- * or the given interface.
- * @param stream The output stream.
- * @param className Name of the class.
- * @param apiData The parsed API data.
- * @param ix The id of the extension to generate definitions for.
- * Also used to specify if definitions for the main API is to be generated.
- */
-void streamJavaDefinitionFile(
-	ostream& stream,
-	const string& className,
-	const Interface& apiData,
-	int ix)
+static void streamJavaStructOffsets(ostream& stream, const Interface& inf, int ix) {
+	for(size_t i=0; i<inf.structs.size(); i++) {
+		const Struct& s(inf.structs[i]);
+		if(s.ix != ix)
+			continue;
+		streamStructOffsets(stream, inf, s, 0, 0, s.name + "_", sotJava);
+	}
+}
+
+void streamJavaDefinitionFile(ostream& stream, const string& className, const Interface& inf,
+	const vector<Ix>& ixs, int ix)
 {
 	stream << "package com.mosync.internal.generated;\n\n";
 	stream << "public class " << className << "\n";
 	stream << "{\n";
 
-	streamJavaConstants(stream, apiData.constSets, ix);
+	streamJavaConstants(stream, inf.constSets, ix);
+
+	streamJavaStructOffsets(stream, inf, ix);
 
 	stream << "}\n";
 }
@@ -1455,8 +1454,8 @@ static const char* escapeCSharp(const string& name) {
 	return name.c_str();
 }
 
-size_t streamCSharpOffsets(ostream& stream, const Interface& inf,
-	const Struct& s, size_t offset, int indent)
+size_t streamStructOffsets(ostream& stream, const Interface& inf,
+	const Struct& s, size_t offset, int indent, const string& prefix, StructOffsetType sot)
 {
 	size_t structSize = 0;
 	for(size_t j=0; j<s.members.size(); j++) {
@@ -1469,7 +1468,7 @@ size_t streamCSharpOffsets(ostream& stream, const Interface& inf,
 			if(isAnonStructName(pod.type)) {
 				if(!subStruct)
 					throwException("Struct not found: " + pod.type);
-				memberSize = streamCSharpOffsets(stream, inf, *subStruct, offset, indent);
+				memberSize = streamStructOffsets(stream, inf, *subStruct, offset, indent, prefix + pod.name + "_", sot);
 				max = MAX(max, memberSize);
 				continue;
 			}
@@ -1487,13 +1486,22 @@ size_t streamCSharpOffsets(ostream& stream, const Interface& inf,
 
 			if(subStruct && !array) {
 				streamIndent(stream, indent);
-				stream << "public class "<<escapeCSharp(baseName)<<" {\n";
-				memberSize = streamCSharpOffsets(stream, inf, *subStruct, offset, indent+1);
+				if(sot == sotCS)
+					stream << "public class "<<escapeCSharp(baseName)<<" {\n";
+				memberSize = streamStructOffsets(stream, inf, *subStruct, offset, indent+1, prefix + pod.name + "_", sot);
 				streamIndent(stream, indent);
-				stream << "}\n";
+				if(sot == sotCS)
+					stream << "}\n";
 			} else {
 				streamIndent(stream, indent);
-				stream << "public const int "<<escapeCSharp(baseName)<< " = " <<offset<< ";\n";
+				size_t po = offset;
+				if((offset % 4 == 0) && sot == sotJava)
+					po /= 4;
+				switch(sot) {
+				case sotCS: stream << "public const"; break;
+				case sotJava: stream << "public static final"; break;
+				}
+				stream <<" int "<<prefix<<escapeCSharp(baseName)<< " = " <<po<< ";\n";
 			}
 			max = MAX(max, memberSize);
 		}

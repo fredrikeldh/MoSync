@@ -277,7 +277,7 @@ static void outputMaapi(const vector<Ix>& ixs, const Interface& maapi) {
 		// the Android runtime).
 		string className = "MAAPI_consts";
 		ofstream javaFile(("Output/" + className + ".java").c_str());
-		streamJavaDefinitionFile(javaFile, className, maapi, MAIN_INTERFACE);
+		streamJavaDefinitionFile(javaFile, className, maapi, ixs, MAIN_INTERFACE);
 	}
 
 	// Generate files for API extensions.
@@ -298,7 +298,7 @@ static void outputMaapi(const vector<Ix>& ixs, const Interface& maapi) {
 		// the Android runtime).
 		string className = toupper(name);
 		ofstream javaFile(("Output/" + className + ".java").c_str());
-		streamJavaDefinitionFile(javaFile, className, maapi, i);
+		streamJavaDefinitionFile(javaFile, className, maapi, ixs, i);
 	}
 }
 
@@ -455,7 +455,7 @@ static void outputMaapiCSharp(const vector<Ix>& ixs, const Interface& maapi) {
 		if(isAnonStructName(s.name))
 			continue;
 		maapiFile << "\tpublic class "<<s.name<<" {\n";
-		streamCSharpOffsets(maapiFile, maapi, s, 0, 2);
+		streamStructOffsets(maapiFile, maapi, s, 0, 2, "", sotCS);
 		maapiFile << "\t}\n";
 	}
 	maapiFile << "}\n\n";
@@ -734,7 +734,7 @@ static void outputMaapiCSharpWP8(const vector<Ix>& ixs, const Interface& maapi) 
 		if(isAnonStructName(s.name))
 			continue;
 		maapiFile << "\tpublic class "<<s.name<<" {\n";
-		streamCSharpOffsets(maapiFile, maapi, s, 0, 2);
+		streamStructOffsets(maapiFile, maapi, s, 0, 2, "", sotCS);
 		maapiFile << "\t}\n";
 	}
 	maapiFile << "}\n\n";

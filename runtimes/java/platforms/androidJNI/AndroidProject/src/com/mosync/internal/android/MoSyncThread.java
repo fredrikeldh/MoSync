@@ -19,35 +19,8 @@ package com.mosync.internal.android;
 
 import static com.mosync.internal.android.MoSyncHelpers.EXTENT;
 import static com.mosync.internal.android.MoSyncHelpers.SYSLOG;
-import static com.mosync.internal.generated.MAAPI_consts.EVENT_TYPE_BLUETOOTH_TURNED_OFF;
-import static com.mosync.internal.generated.MAAPI_consts.EVENT_TYPE_BLUETOOTH_TURNED_ON;
-import static com.mosync.internal.generated.MAAPI_consts.EVENT_TYPE_SCREEN_STATE_OFF;
-import static com.mosync.internal.generated.MAAPI_consts.EVENT_TYPE_SCREEN_STATE_ON;
-import static com.mosync.internal.generated.MAAPI_consts.IOCTL_UNAVAILABLE;
-import static com.mosync.internal.generated.MAAPI_consts.MAS_CREATE_IF_NECESSARY;
-import static com.mosync.internal.generated.MAAPI_consts.MA_CAMERA_RES_OK;
-import static com.mosync.internal.generated.MAAPI_consts.MA_CAMERA_RES_SNAPSHOT_IN_PROGRESS;
-import static com.mosync.internal.generated.MAAPI_consts.MA_IMAGE_PICKER_EVENT_RETURN_TYPE_IMAGE_HANDLE;
-import static com.mosync.internal.generated.MAAPI_consts.MA_NFC_NOT_AVAILABLE;
-import static com.mosync.internal.generated.MAAPI_consts.MA_RESOURCE_CLOSE;
-import static com.mosync.internal.generated.MAAPI_consts.MA_RESOURCE_OPEN;
-import static com.mosync.internal.generated.MAAPI_consts.MA_TOAST_DURATION_LONG;
-import static com.mosync.internal.generated.MAAPI_consts.MA_TOAST_DURATION_SHORT;
-import static com.mosync.internal.generated.MAAPI_consts.MA_WAKE_LOCK_ON;
-import static com.mosync.internal.generated.MAAPI_consts.NOTIFICATION_TYPE_APPLICATION_LAUNCHER;
-import static com.mosync.internal.generated.MAAPI_consts.RES_BAD_INPUT;
-import static com.mosync.internal.generated.MAAPI_consts.RES_OK;
-import static com.mosync.internal.generated.MAAPI_consts.RES_OUT_OF_MEMORY;
-import static com.mosync.internal.generated.MAAPI_consts.STERR_GENERIC;
-import static com.mosync.internal.generated.MAAPI_consts.STERR_NONEXISTENT;
-import static com.mosync.internal.generated.MAAPI_consts.TRANS_MIRROR;
-import static com.mosync.internal.generated.MAAPI_consts.TRANS_MIRROR_ROT180;
-import static com.mosync.internal.generated.MAAPI_consts.TRANS_MIRROR_ROT270;
-import static com.mosync.internal.generated.MAAPI_consts.TRANS_MIRROR_ROT90;
-import static com.mosync.internal.generated.MAAPI_consts.TRANS_NONE;
-import static com.mosync.internal.generated.MAAPI_consts.TRANS_ROT180;
-import static com.mosync.internal.generated.MAAPI_consts.TRANS_ROT270;
-import static com.mosync.internal.generated.MAAPI_consts.TRANS_ROT90;
+import static com.mosync.internal.generated.MAAPI_consts.*;
+import static com.mosync.internal.generated.IX_PIM.*;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -3702,7 +3675,8 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	int maNotificationPushGetData(int handle, int data)
 	{
 		IntBuffer ib = getMemorySlice(data, 6*4).asIntBuffer();
-		return mMoSyncNotifications.maNotificationPushGetData(handle, ib.get(1), ib.get(2));
+		return mMoSyncNotifications.maNotificationPushGetData(handle,
+			ib.get(MAPushNotificationData_alertMessage), ib.get(MAPushNotificationData_alertMessageSize));
 	}
 
 	/**
@@ -4248,9 +4222,9 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		{
 			IntBuffer ib = getMemorySlice(d, 4 * 3).asIntBuffer();
 			return mMoSyncBluetooth.maBtGetNewDevice(
-				ib.get(0),
-				ib.get(1),
-				ib.get(2),
+				ib.get(MABtDevice_name),
+				ib.get(MABtDevice_nameBufSize),
+				ib.get(MABtDevice_actualNameLength),
 				d+12);
 		}
 		else
@@ -4957,8 +4931,8 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		IntBuffer ib = getMemorySlice(rect, 16).asIntBuffer();
 
 		int returnVal = mMoSyncCameraController.enablePreviewEvents(
-			eventType, previewBuffer, ib.get(0), ib.get(1),
-			ib.get(2), ib.get(3));
+			eventType, previewBuffer, ib.get(MARect_left), ib.get(MARect_top),
+			ib.get(MARect_width), ib.get(MARect_height));
 
 		return returnVal;
 	}
@@ -5432,13 +5406,15 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	int maPimItemSetLabel(int args, int index)
 	{
 		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
-		return mMoSyncPIM.maPimItemSetLabel(ib.get(0), ib.get(1), ib.get(2), ib.get(3), index);
+		return mMoSyncPIM.maPimItemSetLabel(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
+			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), index);
 	}
 
 	int maPimItemGetLabel(int args, int index)
 	{
 		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
-		return mMoSyncPIM.maPimItemGetLabel(ib.get(0), ib.get(1), ib.get(2), ib.get(3), index);
+		return mMoSyncPIM.maPimItemGetLabel(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
+			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), index);
 	}
 
 	int maPimFieldType(int list, int field)
@@ -5449,19 +5425,22 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	int maPimItemGetValue(int args, int index)
 	{
 		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
-		return mMoSyncPIM.maPimItemGetValue(ib.get(0), ib.get(1), ib.get(2), ib.get(3), index);
+		return mMoSyncPIM.maPimItemGetValue(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
+			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), index);
 	}
 
 	int maPimItemSetValue(int args, int index, int attributes)
 	{
 		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
-		return mMoSyncPIM.maPimItemSetValue(ib.get(0), ib.get(1), ib.get(2), ib.get(3), index, attributes);
+		return mMoSyncPIM.maPimItemSetValue(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
+			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), index, attributes);
 	}
 
 	int maPimItemAddValue(int args, int attributes)
 	{
 		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
-		return mMoSyncPIM.maPimItemAddValue(ib.get(0), ib.get(1), ib.get(2), ib.get(3), attributes);
+		return mMoSyncPIM.maPimItemAddValue(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
+			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), attributes);
 	}
 
 	int maPimItemRemoveValue(int item, int field, int index)

@@ -142,6 +142,11 @@ enum OutputType {
 	otJni,
 };
 
+enum StructOffsetType {
+	sotCS,
+	sotJava,
+};
+
 #define MAIN_INTERFACE (-1)
 
 //doesn't set Interface.path
@@ -156,11 +161,8 @@ void streamHash(ostream& stream, const Interface& inf);
 void streamHeaderFile(ostream& stream, const Interface& inf, const vector<Ix>& ixs, int ix);
 void streamCppDefsFile(ostream& stream, const Interface& inf, const vector<Ix>& ixs,
 	int ix, OutputType);
-void streamJavaDefinitionFile(
-	ostream& stream,
-	const string& className,
-	const Interface& apiData,
-	int ix);
+void streamJavaDefinitionFile(ostream& stream, const string& className, const Interface& inf,
+	const vector<Ix>& ixs, int ix);
 
 void streamConstants(ostream& stream, const vector<ConstSet>& constSets, int ix);
 void streamIoctlDefines(ostream& stream, const Interface& ioctls, const string& headerName,
@@ -181,7 +183,10 @@ void outputCSharpSyscallNativeArg(ostream& maapiFile, int i, const string& coreo
 void outputCSharpIoctlArg(ostream& maapiFile, int i, const string& coreobject);
 void outputCSharpSyscallArgTyped(ostream& maapiFile, int& i, const Argument& a, const Interface& maapi, const string& coreobject);
 void outputCSharpIoctlArgTyped(ostream& maapiFile, int& argindex, const Argument& a, const Interface& maapi, const string& coreobject);
-size_t streamCSharpOffsets(ostream& stream, const Interface& inf, const Struct& s, size_t offset, int indent);
+
+size_t streamStructOffsets(ostream& stream, const Interface& inf, const Struct& s,
+	size_t offset, int indent, const string& prefix, StructOffsetType);
+
 void streamCSharpConstants(ostream& maapiFile, const Interface& maapi);
 void streamCSharpFunctionDelegates(ostream& maapiFile, const Interface& maapi);
 void outputCSharpIoctlArgTypedWP8(ostream& maapiFile, int& i, const Argument& a, const Interface& maapi, const string& coreObject);
