@@ -1,3 +1,4 @@
+#include "config_platform.h"
 #include "jniIOCtl.h"
 #include <generated/JNI_defs.h>
 #include <generated/JNI_IX_OPENGL_ES_MA.h>
@@ -233,6 +234,20 @@
 	m(maDBCursorGetColumnText)\
 	m(maDBCursorGetColumnInt)\
 	m(maDBCursorGetColumnDouble)\
+	m(maGattConnect) \
+	m(maGattFetchServices) \
+	m(maGattServiceCount) \
+	m(maGattService) \
+	m(maGattChar) \
+	m(maGattDesc) \
+	m(maGattFetchRssi) \
+	m(maGattFetchCharValue) \
+	m(maGattFetchDescValue) \
+	m(maGattCharValue) \
+	m(maGattDescValue) \
+	m(maGattCharWrite) \
+	m(maGattDescWrite) \
+	m(maGattNotification) \
 
 #define LOG(...) __android_log_print(ANDROID_LOG_INFO, "MoSyncJniIOCtl", __VA_ARGS__)
 

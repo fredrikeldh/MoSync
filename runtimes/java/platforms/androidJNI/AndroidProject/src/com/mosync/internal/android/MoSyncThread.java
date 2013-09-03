@@ -44,6 +44,9 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.UUID;
+
+import android.bluetooth.*;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLContext;
@@ -260,8 +263,8 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	Canvas mCanvas;
 	Bitmap mBitmap;
 
-	int mWidth;
-	int mHeight;
+	int mWidth=0;
+	int mHeight=0;
 
 	int mClipLeft, mClipTop, mClipWidth, mClipHeight;
 
@@ -636,6 +639,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		// Save the clip state since we have a new canvas created.
 		// This initial save is needed for the clip rect stack to
 		// work correctly when calling restore clip rect.
+		Log.i("mCanvas", "save");
 		mCanvas.save();
 		mCanvas.clipRect(mClipLeft, mClipTop, mClipWidth, mClipHeight, Region.Op.REPLACE);
 
@@ -1095,24 +1099,32 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	public void run()
 	{
 		//Log.i("MoSync Thread", "run");
-
-		// Load the program.
-		if (false == loadProgram() && !isNative)
-		{
-			logError("load program failed!!");
-			return;
-		}
-
-		// Run program. This enters a while loop in C-code.
-		if (isNative) {
-			for (String deferred : mDeferredModules) {
-				String lib = mStaticModules.contains(deferred) ? mUserLib : deferred;
-				runInitFunction(lib, mAppLibPaths.get(deferred));
+		try {
+			// Load the program.
+			if (false == loadProgram() && !isNative)
+			{
+				logError("load program failed!!");
+				return;
 			}
-			mContext.finish();
-			nativeExit();
-		} else {
-			nativeRun();
+
+			// Run program. This enters a while loop in C-code.
+			if (isNative) {
+				for (String deferred : mDeferredModules) {
+					String lib = mStaticModules.contains(deferred) ? mUserLib : deferred;
+					runInitFunction(lib, mAppLibPaths.get(deferred));
+				}
+				mContext.finish();
+				nativeExit();
+			} else {
+				nativeRun();
+			}
+		} catch(Throwable t) {
+			t.printStackTrace();
+			maPanic(
+				-1,
+				"Exception in run - " +
+				"check stack trace in logcat: " +
+				t.toString());
 		}
 	}
 
@@ -1242,7 +1254,9 @@ public class MoSyncThread extends Thread implements MoSyncContext
 
 		// Restore clip state and save before setting the clip rect.
 		// Note that we do an initial save of the clip state in initSyscalls.
+		Log.i("mCanvas", "restore maSetClipRect");
 		mCanvas.restore();
+		Log.i("mCanvas", "save maSetClipRect");
 		mCanvas.save();
 		mCanvas.clipRect(left, top, left+width, top+height, Region.Op.REPLACE);
 	}
@@ -1790,6 +1804,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		mMaDrawImageRegionTempDestRect.bottom = srcRectHeight;
 
 		// Save the canvas matrix state.
+		Log.i("mCanvas", "saveMSF");
 		mCanvas.save(Canvas.MATRIX_SAVE_FLAG);
 
 		// Set up canvas matrix for each transformation.
@@ -1853,6 +1868,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 			null);
 
 		// Restore canvas matrix.
+		Log.i("mCanvas", "restoreMSF");
 		mCanvas.restore();
 	}
 
@@ -2819,9 +2835,11 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	 * @param str The string to send to logcat.
 	 * @param size The number of characters in the string.
 	 */
-	int maWriteLog(String str, int size)
+	int maWriteLog(int str, int size)
 	{
-		Log.i("maWriteLog", str);
+		byte[] buf = new byte[size];
+		getMemorySlice(str, size).get(buf);
+		Log.i("maWriteLog", new String(buf));
 		return 1;
 	}
 
@@ -3674,7 +3692,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	 */
 	int maNotificationPushGetData(int handle, int data)
 	{
-		IntBuffer ib = getMemorySlice(data, 6*4).asIntBuffer();
+		IntBuffer ib = getMemorySlice(data, _MAPushNotificationData_size).asIntBuffer();
 		return mMoSyncNotifications.maNotificationPushGetData(handle,
 			ib.get(MAPushNotificationData_alertMessage), ib.get(MAPushNotificationData_alertMessageSize));
 	}
@@ -4220,7 +4238,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	{
 		if (isBluetoothApiAvailable())
 		{
-			IntBuffer ib = getMemorySlice(d, 4 * 3).asIntBuffer();
+			IntBuffer ib = getMemorySlice(d, _MABtDevice_size).asIntBuffer();
 			return mMoSyncBluetooth.maBtGetNewDevice(
 				ib.get(MABtDevice_name),
 				ib.get(MABtDevice_nameBufSize),
@@ -4928,7 +4946,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 			return IOCTL_UNAVAILABLE;
 		}
 
-		IntBuffer ib = getMemorySlice(rect, 16).asIntBuffer();
+		IntBuffer ib = getMemorySlice(rect, _MARect_size).asIntBuffer();
 
 		int returnVal = mMoSyncCameraController.enablePreviewEvents(
 			eventType, previewBuffer, ib.get(MARect_left), ib.get(MARect_top),
@@ -5405,14 +5423,14 @@ public class MoSyncThread extends Thread implements MoSyncContext
 
 	int maPimItemSetLabel(int args, int index)
 	{
-		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		IntBuffer ib = getMemorySlice(args, _MA_PIM_ARGS_size).asIntBuffer();
 		return mMoSyncPIM.maPimItemSetLabel(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
 			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), index);
 	}
 
 	int maPimItemGetLabel(int args, int index)
 	{
-		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		IntBuffer ib = getMemorySlice(args, _MA_PIM_ARGS_size).asIntBuffer();
 		return mMoSyncPIM.maPimItemGetLabel(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
 			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), index);
 	}
@@ -5424,21 +5442,21 @@ public class MoSyncThread extends Thread implements MoSyncContext
 
 	int maPimItemGetValue(int args, int index)
 	{
-		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		IntBuffer ib = getMemorySlice(args, _MA_PIM_ARGS_size).asIntBuffer();
 		return mMoSyncPIM.maPimItemGetValue(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
 			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), index);
 	}
 
 	int maPimItemSetValue(int args, int index, int attributes)
 	{
-		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		IntBuffer ib = getMemorySlice(args, _MA_PIM_ARGS_size).asIntBuffer();
 		return mMoSyncPIM.maPimItemSetValue(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
 			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), index, attributes);
 	}
 
 	int maPimItemAddValue(int args, int attributes)
 	{
-		IntBuffer ib = getMemorySlice(args, 16).asIntBuffer();
+		IntBuffer ib = getMemorySlice(args, _MA_PIM_ARGS_size).asIntBuffer();
 		return mMoSyncPIM.maPimItemAddValue(ib.get(MA_PIM_ARGS_item), ib.get(MA_PIM_ARGS_field),
 			ib.get(MA_PIM_ARGS_buf), ib.get(MA_PIM_ARGS_bufSize), attributes);
 	}
@@ -5924,4 +5942,187 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		}
 	}
 
+	class GattHandler extends BluetoothGattCallback {
+		final int mHandle;
+		GattHandler(int h) {
+			mHandle = h;
+		}
+		@Override
+		public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CONNECT, status,
+				newState == android.bluetooth.BluetoothProfile.STATE_CONNECTED ? 1 : 0});
+		}
+		@Override
+		public void onServicesDiscovered(BluetoothGatt g, int status) {
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_SERVICES, status});
+		}
+		@Override
+		public void onReadRemoteRssi(BluetoothGatt g, int rssi, int status) {
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_RSSI, status, rssi});
+		}
+		@Override
+		public void onCharacteristicRead(BluetoothGatt g, BluetoothGattCharacteristic c, int status) {
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_READ, status});
+		}
+		@Override
+		public void onDescriptorRead(BluetoothGatt g, BluetoothGattDescriptor d, int status) {
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_DESC_READ, status});
+		}
+		@Override
+		public void onCharacteristicWrite(BluetoothGatt g, BluetoothGattCharacteristic c, int status) {
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_WRITE, status});
+		}
+		@Override
+		public void onDescriptorWrite(BluetoothGatt g, BluetoothGattDescriptor d, int status) {
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_DESC_WRITE, status});
+		}
+		@Override
+		public void onCharacteristicChanged(BluetoothGatt g, BluetoothGattCharacteristic c) {
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_CHANGED});
+		}
+	};
+
+	void putUuid(IntBuffer ib, int index, UUID u) {
+		long most = u.getMostSignificantBits();
+		ib.put(index+0, (int)(most >>> 32));
+		ib.put(index+1, (int)(most));
+		long least = u.getLeastSignificantBits();
+		ib.put(index+2, (int)(least >>> 32));
+		ib.put(index+3, (int)(least));
+	}
+
+	int mNextGattHandle = 1;
+	HashMap<Integer, BluetoothGatt> mGatt = null;
+
+	int maGattConnect(int address) {
+		ByteBuffer a = getMemorySlice(address, 6);
+		String sa = String.format("%02X:%02X:%02X:%02X:%02X:%02X", a.get(0), a.get(1), a.get(2), a.get(3), a.get(4), a.get(5));
+		Log.i("@@@MoSync", "maGattConnect("+sa+")");
+		GattHandler gh = new GattHandler(mNextGattHandle);
+		BluetoothGatt g = mMoSyncBluetooth.getBluetoothAdapter().getRemoteDevice(sa).connectGatt(mContext, true, gh);
+		if(mGatt == null)
+			mGatt = new HashMap<Integer, BluetoothGatt>();
+		Object res = mGatt.put(mNextGattHandle, g);
+		assert(res == null);
+		return mNextGattHandle++;
+	}
+
+	int maGattFetchServices(int device) {
+		boolean res = mGatt.get(device).discoverServices();
+		return res ? 1 : 0;
+	}
+
+	int maGattServiceCount(int device) {
+		return mGatt.get(device).getServices().size();
+	}
+	int maGattService(int service) {
+		IntBuffer ib = getMemorySlice(service, _MAGattService_size).asIntBuffer();
+		BluetoothGattService s = mGatt.get(ib.get(MAGattService_device)).getServices().
+			get(ib.get(MAGattService_serviceIndex));
+		ib.put(MAGattService_type, s.getType());
+		ib.put(MAGattService_id, s.getInstanceId());
+		putUuid(ib, MAGattService_uuid_i, s.getUuid());
+		ib.put(MAGattService_charCount, s.getCharacteristics().size());
+		ib.put(MAGattService_inclCount, s.getIncludedServices().size());
+		return 0;
+	}
+
+	private BluetoothGattCharacteristic getChar(BluetoothGatt g, IntBuffer ib) {
+		return g.getServices().
+			get(ib.get(MAGattChar_serviceIndex)).getCharacteristics().
+			get(ib.get(MAGattChar_charIndex));
+	}
+
+	private BluetoothGattDescriptor getDesc(BluetoothGatt g, IntBuffer ib) {
+		return g.getServices().
+			get(ib.get(MAGattDesc_serviceIndex)).getCharacteristics().
+			get(ib.get(MAGattDesc_charIndex)).getDescriptors().
+			get(ib.get(MAGattDesc_descIndex));
+	}
+
+	int maGattChar(int ca) {
+		IntBuffer ib = getMemorySlice(ca, _MAGattChar_size).asIntBuffer();
+		BluetoothGattCharacteristic c = getChar(mGatt.get(ib.get(MAGattChar_device)), ib);
+		putUuid(ib, MAGattChar_uuid_i, c.getUuid());
+		ib.put(MAGattChar_id, c.getInstanceId());
+		ib.put(MAGattChar_permissions, c.getPermissions());
+		ib.put(MAGattChar_properties, c.getProperties());
+		ib.put(MAGattChar_writeType, c.getWriteType());
+		ib.put(MAGattChar_descCount, c.getDescriptors().size());
+		return 0;
+	}
+
+	int maGattDesc(int da) {
+		IntBuffer ib = getMemorySlice(da, _MAGattDesc_size).asIntBuffer();
+		BluetoothGattDescriptor d = getDesc(mGatt.get(ib.get(MAGattDesc_device)), ib);
+		putUuid(ib, MAGattDesc_uuid_i, d.getUuid());
+		ib.put(MAGattDesc_permissions, d.getPermissions());
+		return 0;
+	}
+
+	int maGattFetchRssi(int device) {
+		boolean res = mGatt.get(device).readRemoteRssi();
+		return res ? 1 : 0;
+	}
+
+	int maGattFetchCharValue(int ca) {
+		IntBuffer ib = getMemorySlice(ca, _MAGattChar_size).asIntBuffer();
+		BluetoothGatt g = mGatt.get(ib.get(MAGattChar_device));
+		boolean res = g.readCharacteristic(getChar(g, ib));
+		return res ? 1 : 0;
+	}
+	int maGattFetchDescValue(int da) {
+		IntBuffer ib = getMemorySlice(da, _MAGattDesc_size).asIntBuffer();
+		BluetoothGatt g = mGatt.get(ib.get(MAGattDesc_device));
+		boolean res = g.readDescriptor(getDesc(g, ib));
+		return res ? 1 : 0;
+	}
+
+	int maGattCharValue(int ca) {
+		IntBuffer ib = getMemorySlice(ca, _MAGattChar_size).asIntBuffer();
+		BluetoothGattCharacteristic c = getChar(mGatt.get(ib.get(MAGattChar_device)), ib);
+		ByteBuffer bb = getMemorySlice(ib.get(MAGattChar_value), ib.get(MAGattChar_len));
+		bb.put(c.getValue());
+		return 0;
+	}
+	int maGattDescValue(int da) {
+		IntBuffer ib = getMemorySlice(da, _MAGattDesc_size).asIntBuffer();
+		BluetoothGattDescriptor d = getDesc(mGatt.get(ib.get(MAGattDesc_device)), ib);
+		ByteBuffer bb = getMemorySlice(ib.get(MAGattDesc_value), ib.get(MAGattDesc_len));
+		bb.put(d.getValue());
+		return 0;
+	}
+
+	int maGattCharWrite(int ca) {
+		IntBuffer ib = getMemorySlice(ca, _MAGattChar_size).asIntBuffer();
+		BluetoothGatt g = mGatt.get(ib.get(MAGattChar_device));
+		BluetoothGattCharacteristic c = getChar(g, ib);
+		ByteBuffer bb = getMemorySlice(ib.get(MAGattChar_value), ib.get(MAGattChar_len));
+		boolean res = c.setValue(bb.array());
+		if(!res) {
+			return MAGATT_ERR_VALUE_NOT_ACCEPTED;
+		}
+		res = g.writeCharacteristic(c);
+		return res ? 1 : 0;
+	}
+	int maGattDescWrite(int da) {
+		IntBuffer ib = getMemorySlice(da, _MAGattDesc_size).asIntBuffer();
+		BluetoothGatt g = mGatt.get(ib.get(MAGattDesc_device));
+		BluetoothGattDescriptor d = getDesc(g, ib);
+		ByteBuffer bb = getMemorySlice(ib.get(MAGattDesc_value), ib.get(MAGattDesc_len));
+		boolean res = d.setValue(bb.array());
+		if(!res) {
+			return MAGATT_ERR_VALUE_NOT_ACCEPTED;
+		}
+		res = g.writeDescriptor(d);
+		return res ? 1 : 0;
+	}
+
+	int maGattNotification(int ca, int enable) {
+		IntBuffer ib = getMemorySlice(ca, _MAGattChar_size).asIntBuffer();
+		BluetoothGatt g = mGatt.get(ib.get(MAGattChar_device));
+		BluetoothGattCharacteristic c = getChar(mGatt.get(ib.get(MAGattChar_device)), ib);
+		boolean res = g.setCharacteristicNotification(c, enable == 0 ? false : true);
+		return res ? 1 : 0;
+	}
 }

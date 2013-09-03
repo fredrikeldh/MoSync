@@ -669,6 +669,14 @@ static void nativePostEvent(JNIEnv* env, jobject jthis, jintArray eventBuffer)
 		event.mediaHandle = intArray[2];
 		event.operationResultCode = intArray[3];
 	}
+	else if (event.type == EVENT_TYPE_GATT)
+	{
+		memcpy(&event.gatt, intArray+1, sizeof(int)*(arrayLength-1));
+	}
+	else if(arrayLength > 1)
+	{
+		maPanic(1, "Unhandled event type!");
+	}
 	// HOLD ON!
 	// Don't forget to update the file EventQueue.cpp when adding
 	// event types that would potentially overflow the event queue.

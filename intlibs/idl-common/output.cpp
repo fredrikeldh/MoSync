@@ -296,7 +296,8 @@ static void streamJavaStructOffsets(ostream& stream, const Interface& inf, int i
 		const Struct& s(inf.structs[i]);
 		if(s.ix != ix)
 			continue;
-		streamStructOffsets(stream, inf, s, 0, 0, s.name + "_", sotJava);
+		size_t size = streamStructOffsets(stream, inf, s, 0, 0, s.name + "_", sotJava);
+		stream << "public static final int _"<<s.name<<"_size = "<<size<<";\n";
 	}
 }
 

@@ -1493,6 +1493,9 @@ interface MAAPI {
 		* application to the device storages, reached the finish point.
 		*/
 		MEDIA_EXPORT_FINISHED = 55;
+
+		/// see \link GATTAPI \endlink
+		GATT = 56;
 	}
 
 	/**
@@ -1584,6 +1587,16 @@ interface MAAPI {
 		* One of the \link MA_PURCHASE_ERROR_INVALID_HANDLE MA_PURCHASE_ERROR \endlink constants.
 		*/
 		int errorCode;
+	}
+
+	struct MAGattEventData {
+		MAHandle device;
+		int type;
+		int status;
+		union {
+			int rssi;
+			int connected;
+		}
 	}
 
 	/**
@@ -1797,6 +1810,8 @@ interface MAAPI {
 			* Contains the new orientation when a #EVENT_TYPE_ORIENTATION_DID_CHANGE event is sent.
 			*/
 			int orientation;
+
+			MAGattEventData gatt;
 		}
 	}
 
