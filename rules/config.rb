@@ -25,6 +25,9 @@ default_const(:CONFIG_HAVE_COMMON_BUILDDIR, true)
 # If false, load subdir's workfile in current context.
 default_const(:CONFIG_SUBDIR_RELOAD, false)
 
+# After all tasks are completed, make sure that none of them are still needed.
+# This takes significant time, so should only be turned on to debug the workfile system.
+default_const(:CONFIG_CHECK_TASK_INTEGRITY, false)
 
 #require "#{File.dirname(__FILE__)}/gccModule.rb"
 
