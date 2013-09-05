@@ -214,6 +214,8 @@ class CCompileWork < FileTask
 
 		@object_tasks = collect_objects(all_sourcefiles) + @EXTRA_OBJECTS
 		if(CONFIG_HAVE_COMMON_BUILDDIR)
+			@LOCAL_LIBS ||= []
+			@LOCAL_DLLS ||= []
 			llo = @LOCAL_LIBS.collect { |ll| FileTask.new(@COMMON_BUILDDIR + ll + ".a") }
 			lld = @LOCAL_DLLS.collect { |ld| FileTask.new(@COMMON_BUILDDIR + lldPrefix + ld + HOST_DLL_FILE_ENDING) }
 			@object_tasks += llo + lld

@@ -35,6 +35,9 @@ class Works
 			resetTargets(args)
 			load(File.expand_path(workfileName), true)
 		end
+		if(CONFIG_CHECK_TASK_INTEGRITY)
+			sh "ruby workfile.rb TASK_TEST_RUN="
+		end
 		Dir.chdir(oldDir)
 	end
 

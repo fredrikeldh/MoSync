@@ -54,6 +54,41 @@ class Task
 		raise "@needed not set!" if(@needed == nil)
 		@needed.freeze
 		Works.add(self) if(@needed)
+
+		# detect duplicates
+		if(self.respond_to?(:name))
+			key = self.name
+		else
+			key = self
+		end
+
+		t = @@taskSet[key]
+		if(t == nil)
+			@@taskSet[key] = self
+		else
+			e = t.compareWithLogging(self)
+			if(!e)
+				#p self.respond_to?(:name), key, t.name, self.name
+				p key
+				if(CONFIG_PRINT_FILETASK_BACKTRACE)
+					puts "self.backtrace: #{@backtrace.join("\n")}"
+					puts "t.backtrace: #{t.instance_variable_get(:@backtrace).join("\n")}"
+				end
+				raise "Duplicate variant task detected!"
+			end
+		end
+	end
+
+	def self.reset
+		# used to deduplicate identical tasks,
+		# and detect tasks with the same name but different settings.
+		@@taskSet = {}
+	end
+
+	reset
+
+	def self.getTaskFromSet(key)
+		return @@taskSet[key]
 	end
 
 	def setNeeded
@@ -417,6 +452,8 @@ class Works
 		@@waitingThreads = 0
 		@@abort = false
 		@@threadNames = {}
+
+		Task.reset
 	end
 
 	reset
