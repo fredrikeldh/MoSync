@@ -1,0 +1,15 @@
+.res RES_SOUND_1
+.ubin
+.include "sounds/sound-1.90s.mp3"
+
+.res
+.ubin
+.include "sounds/sound-0.26s.mp3"
+
+.res
+.ubin
+.include "sounds/sound-0.60s.mp3"
+
+.res
+.ubin
+.include "sounds/sound.039s.mp3"

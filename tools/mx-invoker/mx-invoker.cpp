@@ -104,7 +104,7 @@ static void outputNativeHeader(const char* output, const Interface& inf) {
 	stream << "\n";
 	stream << "#define IDL_HASH_"<<inf.name<<" 0x"<<setfill('0') << setw(8) << hex << calculateChecksum(inf)<<"\n";
 	stream << "\n";
-	streamCppDefs(stream, inf, MAIN_INTERFACE, headerName);
+	streamCppDefs(stream, inf, MAIN_INTERFACE, headerName, otC);
 	streamHeaderFunctions(stream, inf, true);
 	stream << "\n";
 	stream << "#endif\t//"<<headerName<<"\n";

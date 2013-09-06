@@ -23,14 +23,14 @@ using namespace MAUtil;
 BluetoothDiscoverer::BluetoothDiscoverer() : mDD(NULL), mSD(NULL) {}
 
 int BluetoothDiscoverer::startDeviceDiscovery(BluetoothDeviceDiscoveryListener* listener,
-	bool names)
+	bool names, int flags)
 {
 	ASSERT_MSG(listener != NULL, "NULL listener");
 	ASSERT_MSG(mDD == NULL && mSD == NULL, "another operation in progress");
 
 	mDD = listener;
 	Environment::getEnvironment().setBluetoothListener(this);
-	int result = maBtStartDeviceDiscovery(names);
+	int result = maBtStartDeviceDiscovery(names, flags);
 	if(result < 0)
 		mDD = NULL;
 	return result;

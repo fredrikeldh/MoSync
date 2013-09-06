@@ -1,0 +1,140 @@
+// random note:
+// RSSI: signal strength, measured in decibel.
+// We get values from BLE devices ranging from -100 to -10; smaller absolute number means stronger signal.
+
+/** \group GATTAPI
+* BLE devices uses the GATT protocol to communicate.
+* A server device has one or more services.
+* Each service has a UUID, an instance id and a type.
+* Each service also has one or more Characteristics.
+* Each Characteristic has a UUID, an instance id and a byte-string value.
+* Each Characteristic also has zero or more Descriptors.
+* Each Descriptor has a UUID and a byte-string value.
+*
+* Normal usage involves connecting to a remote device,
+* opening a service with a known UUID,
+* reading and writing several known Characteristics.
+*
+* It is possible to register for notification of changes to a Characteristic.
+*
+* GATT events use the MAEvent union member "gatt".
+*/
+
+struct MAGattService {
+	MAUUID uuid;
+	int id;
+	int type;
+	int charCount;
+	int inclCount;
+
+	MAHandle device;
+	int serviceIndex;
+}
+
+struct MAGattChar {
+	MAUUID uuid;
+	int id;
+	int permissions;
+	int properties;
+	int writeType;
+	int descCount;
+
+	char* value;
+	int len;
+
+	MAHandle device;
+	int serviceIndex;
+	int charIndex;
+}
+
+struct MAGattDesc {
+	MAUUID uuid;
+	int permissions;
+
+	char* value;
+	int len;
+
+	MAHandle device;
+	int serviceIndex;
+	int charIndex;
+	int descIndex;
+}
+
+constset int MAGATT_EVENT_ {
+	CONNECT = 1;
+	SERVICES = 2;
+	RSSI = 3;
+	CHAR_READ = 4;
+	DESC_READ = 5;
+	CHAR_WRITE = 6;
+	DESC_WRITE = 7;
+	CHAR_CHANGED = 8;
+}
+
+constset int MAGATT_ERR_ {
+	VALUE_NOT_ACCEPTED = -2;
+}
+
+// async
+// Connects to a BLE device.
+// Returns a GATT MAHandle.
+// Once this operation is complete, maGattFetchServices() becomes operational.
+// returns 0.
+int maGattConnect(in MABtAddr address);
+
+// for all these functions, invalid input values causes Panic.
+
+// async
+// Fetches a list of services for a device.
+// Once this operation is completed, the following functions become operational:
+// maGattServiceCount(), maGattService(),
+// maGattCharCount(), maGattChar(),
+// maGattDescCount(), maGattDesc().
+// returns 1 on fetch start, 0 otherwise.
+int maGattFetchServices(in MAHandle device);
+
+int maGattServiceCount(in MAHandle device);
+// requires device and serviceIndex.
+// writes uuid, id, type and charCount.
+// returns 0.
+int maGattService(out MAGattService service);
+
+// requires device, serviceIndex and charIndex.
+// sets UUID, id, permissions, property, writeType and descCount, but not len.
+// returns 0.
+int maGattChar(out MAGattChar c);
+
+// requires device, serviceIndex, charIndex and descIndex.
+// sets UUID and permissions, but not len.
+// returns 0.
+int maGattDesc(out MAGattDesc d);
+
+// async
+// returns 1 on fetch start, 0 otherwise.
+int maGattFetchRssi(in MAHandle device);
+
+// async
+// requires device, serviceIndex and charIndex (and descIndex).
+// len is set on op finish.
+// c/d must remain valid until op finish. do not use local variables!
+// returns 1 on fetch start, 0 otherwise.
+int maGattFetchCharValue(out MAGattChar c);
+int maGattFetchDescValue(out MAGattDesc d);
+
+// instant.
+// requires value to be a buffer at least the \a len reported by maGattFetchChar().
+// requires \a len to remain unchanged from maGattFetchChar().
+// returns 0.
+int maGattCharValue(out MAGattChar c);
+int maGattDescValue(out MAGattDesc d);
+
+// to update value, call Fetch*, then call *Value again.
+
+// async.
+// returns 1 on write start, 0 otherwise.
+int maGattCharWrite(in MAGattChar c);
+int maGattDescWrite(in MAGattDesc d);
+
+// instant.
+// returns 1 on success, 0 otherwise.
+int maGattNotification(in MAGattChar c, in int enable);

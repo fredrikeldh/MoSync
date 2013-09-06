@@ -206,6 +206,7 @@ LocalFiles.bin*
 
 /runtimes/cpp/platforms/sdl/MoRE/filesystem/*
 /runtimes/cpp/platforms/android/config_platform.h.saved
+/runtimes/cpp/platforms/android/generated
 /runtimes/java/platforms/javaME/setdirs.bat
 /runtimes/java/platforms/javaME/work.bat
 /runtimes/java/platforms/javaME/src/opengl_invoke_generated.jpp

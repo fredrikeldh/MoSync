@@ -291,26 +291,26 @@ void streamHeaderFunctions(ostream& stream, const Interface& inf, bool syscall) 
 	stream << "\n";
 }
 
-/**
- * Generate the content of a .java class file for the main MoSync API
- * or the given interface.
- * @param stream The output stream.
- * @param className Name of the class.
- * @param apiData The parsed API data.
- * @param ix The id of the extension to generate definitions for.
- * Also used to specify if definitions for the main API is to be generated.
- */
-void streamJavaDefinitionFile(
-	ostream& stream,
-	const string& className,
-	const Interface& apiData,
-	int ix)
+static void streamJavaStructOffsets(ostream& stream, const Interface& inf, int ix) {
+	for(size_t i=0; i<inf.structs.size(); i++) {
+		const Struct& s(inf.structs[i]);
+		if(s.ix != ix)
+			continue;
+		size_t size = streamStructOffsets(stream, inf, s, 0, 0, s.name + "_", sotJava);
+		stream << "public static final int _"<<s.name<<"_size = "<<size<<";\n";
+	}
+}
+
+void streamJavaDefinitionFile(ostream& stream, const string& className, const Interface& inf,
+	const vector<Ix>& ixs, int ix)
 {
 	stream << "package com.mosync.internal.generated;\n\n";
 	stream << "public class " << className << "\n";
 	stream << "{\n";
 
-	streamJavaConstants(stream, apiData.constSets, ix);
+	streamJavaConstants(stream, inf.constSets, ix);
+
+	streamJavaStructOffsets(stream, inf, ix);
 
 	stream << "}\n";
 }
@@ -648,9 +648,9 @@ static void streamArgRange(ostream& stream, const vector<Argument>& args,
 }
 
 static void streamIoctlArg(ostream& stream, const vector<Argument>& args,
-	const Argument& arg, const Interface& inf, size_t inK, bool java)
+	const Argument& arg, const Interface& inf, size_t inK, OutputType ot)
 {
-	string ctype = (java ? jType : cType)(inf, arg.type);
+	string ctype = (ot == otJava ? jType : cType)(inf, arg.type);
 	const string& resolvedType = resolveType(inf, ctype);
 	bool isPointer = isPointerType(inf, arg.type) || !arg.in;
 	bool isString = arg.type == "MAString" || arg.type == "MAWString";
@@ -658,7 +658,7 @@ static void streamIoctlArg(ostream& stream, const vector<Argument>& args,
 	bool isDouble = resolvedType == "double" && arg.in;
 	bool isFloat = resolvedType == "float" && arg.in;
 
-	if(!java) {
+	if(ot != otJava) {
 		if(arg.type == "MAAddress") {
 			ctype = "void*";
 			isPointer = true;
@@ -668,6 +668,12 @@ static void streamIoctlArg(ostream& stream, const vector<Argument>& args,
 			ctype = (arg.in ? "const " : "") + ctype;
 		if(!isPointerType(inf, arg.type) && !arg.in)
 			ctype += '*';
+		if(ot == otJni) {
+			if(isPointer)
+				ctype = "int";
+			if(isString && arg.in)
+				ctype = "jstring";
+		}
 	} else if(!arg.in) {
 		ctype = "MAAddress";
 	}
@@ -678,17 +684,17 @@ static void streamIoctlArg(ostream& stream, const vector<Argument>& args,
 	if(isDouble) {
 		stream << "MA_DV "<<dvName<<"; \\\n";
 		stream << dvName<<".MA_DV_HI = ";
-		streamIoctlInputParam(stream, inK, java);
+		streamIoctlInputParam(stream, inK, ot == otJava);
 		stream << "; \\\n";
 		inK++;
 		stream << dvName<<".MA_DV_LO = ";
-		streamIoctlInputParam(stream, inK, java);
+		streamIoctlInputParam(stream, inK, ot == otJava);
 		stream << "; \\\n";
 	}
 	if(isFloat) {
 		stream << "MA_FV "<<dvName<<"; \\\n";
 		stream << dvName<<".i = ";
-		streamIoctlInputParam(stream, inK, java);
+		streamIoctlInputParam(stream, inK, ot == otJava);
 		stream << "; \\\n";
 	}
 	stream << ctype << " " << localName << " = ";
@@ -698,22 +704,31 @@ static void streamIoctlArg(ostream& stream, const vector<Argument>& args,
 	} else if(isFloat) {
 		stream << dvName << ".f";
 	} else {
+		if(isString && ot == otJni && arg.in) {
+			if(isWideString)
+				stream << "jni::wcharToJchar(mJNIEnv, ";
+			else
+				stream << "mJNIEnv->NewStringUTF(";
+		}
 		if(isString && arg.in)
 			stream << (isWideString ? "GVWS(" : "GVS(");
-		else if(isPointer && !java) {
+		else if(isPointer && ot != otJava) {
 			if(arg.range.empty()) {
 				stream << "GVMR(";
 			} else {
-				stream << "(" << arg.type << ") SYSCALL_THIS->GetValidatedMemRange(";
+				if(ot == otJni)
+					stream << "JVMR(";
+				else
+					stream << "(" << arg.type << ") SYSCALL_THIS->GetValidatedMemRange(";
 			}
 		} else if(ctype != "int")
 			stream << "(" << ctype << ")";
 
-		streamIoctlInputParam(stream, inK, java);
+		streamIoctlInputParam(stream, inK, ot == otJava);
 
 		if(isString && arg.in)
 			stream << ")";
-		else if(isPointer && !java) {
+		else if(isPointer && ot != otJava) {
 			if(arg.range.empty()) {
 				string gvmrType;
 				size_t m1 = arg.type.size()-1;
@@ -727,6 +742,8 @@ static void streamIoctlArg(ostream& stream, const vector<Argument>& args,
 				streamArgRange(stream, args, arg.range);
 			}
 		}
+		if(isString && ot == otJni && arg.in)
+			stream << ")";
 	}
 
 	stream << "; \\\n";
@@ -758,8 +775,127 @@ static void streamCaselist(ostream& stream, const Ioctl& ioctl, const string& he
 	}
 }
 
+// returns jniMethodType
+static string streamIoctlTypesJni(ostream& stream, const Interface& inf, const Function& f) {
+	string resolvedReturnType = resolveType(inf, f.returnType);
+	stream << "#define maIOCtl_"<<f.name<<"_types \"(";
+	for(size_t i = 0; i < f.args.size(); i++) {
+		const Argument& a(f.args[i]);
+		string resolvedType = resolveType(inf, a.type);
+		bool isPointer = isPointerType(inf, a.type) || !a.in;
+		if(isPointer && !a.in) {
+			stream << "I";
+		} else if(resolvedType == "char*" || resolvedType == "GLchar*") {
+			stream << "Ljava/lang/String;";
+		} else if(resolvedType == "wchar*") {
+			stream << "Ljava/lang/String;";
+		} else if(resolvedType.find("char*") != string::npos) {
+			throwException("Unsupported argument type");
+		} else if(resolvedType == "int" || resolvedType == "unsigned int" ||
+			resolvedType == "unsigned char" ||
+			isPointer)
+		{
+			stream << "I";
+		} else if(resolvedType == "char*") {
+			stream << "Ljava/lang/String;";
+		} else if(resolvedType == "float") {
+			stream << "F";
+		} else if(resolvedType == "double") {
+			stream << "D";
+		} else if(resolvedType == "long int") {
+			stream << "J";
+		} else {
+			throwException("Unsupported argument type");
+		}
+	}
+	stream << ")";
+	string jniMethodType;
+	if(resolvedReturnType == "int" || resolvedReturnType == "unsigned int" ||
+		resolvedReturnType == "unsigned char")
+	{
+		stream << "I";
+		jniMethodType = "Int";
+	} else if(resolvedReturnType == "long long") {
+		stream << "J";
+		jniMethodType = "Long";
+	} else if(resolvedReturnType == "double") {
+		stream << "D";
+		jniMethodType = "Double";
+	} else if(resolvedReturnType == "void") {
+		stream << "V";
+		jniMethodType = "Void";
+	} else {
+		throwException("Unsupported return type");
+	}
+	stream << "\"\n";
+	return jniMethodType;
+}
+
+static void streamIoctlCallJni(ostream& stream, const Interface& inf, const Function& f,
+	const string& jniMethodType)
+{
+	string resolvedReturnType = resolveType(inf, f.returnType);
+
+	// find method
+	stream << "jclass cls = mJNIEnv->GetObjectClass(mJThis); \\\n";
+	stream << "jmethodID methodID = mJNIEnv->GetMethodID(cls, \""<<f.name<<"\","
+		" maIOCtl_"<<f.name<<"_types); \\\n";
+
+	// call method
+	stream << resolvedReturnType<<" result = IOCTL_UNAVAILABLE; \\\n";
+	stream << "if (methodID != 0) \\\n";
+	stream << "result = mJNIEnv->Call"<<jniMethodType<<"Method(mJThis, methodID";
+	for(size_t i = 0; i < f.args.size(); i++) {
+		const Argument& a(f.args[i]);
+		stream << ", _"<<a.name;
+	}
+	stream << "); \\\n";
+
+	// free allocated objects
+	stream << "mJNIEnv->DeleteLocalRef(cls); \\\n";
+	for(size_t i = 0; i < f.args.size(); i++) {
+		const Argument& a(f.args[i]);
+		if((a.type == "MAString" || a.type == "MAWString") && a.in)
+			stream << "mJNIEnv->DeleteLocalRef(_"<< a.name<<"); \\\n";
+	}
+
+	// return result
+	stream << "return result; \\\n";
+}
+
+static void streamIoctlCallC(ostream& stream, const Interface& inf, const Function& f) {
+	string resolvedReturnType = resolveType(inf, f.returnType);
+	bool returnDouble = resolvedReturnType == "double";
+	bool returnFloat = resolvedReturnType == "float";
+	bool returnVoid = resolvedReturnType == "void";
+	if(returnDouble) {
+		stream << "MA_DV result; \\\n";
+		stream << "result.d = func(";
+	} else if(returnFloat) {
+		stream << "MA_FV result; \\\n";
+		stream << "result.f = func(";
+	} else if(returnVoid) {
+		stream << "func(";
+	} else {
+		stream << "return func(";
+	}
+	for(size_t k = 0; k < f.args.size(); k++) {
+		if(k!=0)
+			stream << ", ";
+		stream << "_" << f.args[k].name;
+	}
+	stream << "); \\\n";
+	if(returnDouble) {
+		stream << "return result.ll; \\\n";
+	} else if(returnFloat) {
+		stream << "return result.i; \\\n";
+	} else if(returnVoid) {
+		stream << "return 0; \\\n";
+	}
+}
+
 void streamIoctlDefines(ostream& stream, const Interface& inf, const string& headerName,
-	int ix, bool java)
+	int ix, OutputType ot)
 {
 	const vector<Ioctl>& ioctls = inf.ioctls;
 	for(size_t i=0; i<ioctls.size(); i++) {
@@ -769,61 +905,49 @@ void streamIoctlDefines(ostream& stream, const Interface& inf, const string& hea
 		streamCaselist(stream, ioctl, headerName, ix, false);
 		streamCaselist(stream, ioctl, headerName, ix, true);
 
-		for (int k = 3; !java && k < 10; k++) {
+		for (int k = 3; ot != otJava && k < 10; k++) {
 			int argNo = k + 1;
 			stream << "#undef ARG_NO_" << argNo << "\n";
 			stream << "#define ARG_NO_" << argNo << " ";
-			stream << "SYSCALL_THIS->GetValidatedStackValue(" << ((k-3)<<2) << " VSV_ARGPTR_USE)\n";
+			if(ot == otC)
+				stream << "SYSCALL_THIS->";
+			if(ot == otJni)
+				stream << "jni::";
+			stream << "GetValidatedStackValue(" << ((k-3)<<2) << " VSV_ARGPTR_USE)\n";
 		}
 		for(size_t j=0; j<ioctl.functions.size(); j++) {
+			string jniMethodType;
 			const IoctlFunction& f(ioctl.functions[j]);
 			if(f.ix != ix)
 				continue;
 
 			stream << "#define " << ioctl.name << "_" << f.f.name << " " << f.f.number << "\n";
+			if(ot == otJni) {
+				jniMethodType = streamIoctlTypesJni(stream, inf, f.f);
+			}
 
 			stream << "#define " << ioctl.name << "_" << f.f.name << "_case(func) \\\n";
 			stream << "case " << f.f.number << ": \\\n";
 			stream << "{ \\\n";
+			// declare local variables for the arguments.
 			for(size_t k = 0, inK = 0; k < f.f.args.size(); k++, inK++) {
 				const Argument& arg(f.f.args[k]);
 				if(arg.range.empty())
-					streamIoctlArg(stream, f.f.args, arg, inf, inK, java);
+					streamIoctlArg(stream, f.f.args, arg, inf, inK, ot);
 			}
 			for(size_t k = 0, inK = 0; k < f.f.args.size(); k++, inK++) {
 				const Argument& arg(f.f.args[k]);
 				if(!arg.range.empty())
-					streamIoctlArg(stream, f.f.args, arg, inf, inK, java);
+					streamIoctlArg(stream, f.f.args, arg, inf, inK, ot);
 			}
 
-			string resolvedReturnType = resolveType(inf, f.f.returnType);
-			bool returnDouble = resolvedReturnType == "double";
-			bool returnFloat = resolvedReturnType == "float";
-			bool returnVoid = resolvedReturnType == "void";
-			if(returnDouble) {
-				stream << "MA_DV result; \\\n";
-				stream << "result.d = func(";
-			} else if(returnFloat) {
-				stream << "MA_FV result; \\\n";
-				stream << "result.f = func(";
-			} else if(returnVoid) {
-				stream << "func(";
+			// declare return variable and call the function.
+			if(ot == otJni) {
+				streamIoctlCallJni(stream, inf, f.f, jniMethodType);
 			} else {
-				stream << "return func(";
+				streamIoctlCallC(stream, inf, f.f);
 			}
-			for(size_t k = 0; k < f.f.args.size(); k++) {
-				if(k!=0)
-					stream << ", ";
-				stream << "_" << f.f.args[k].name;
-			}
-			stream << "); \\\n";
-			if(returnDouble) {
-				stream << "return result.ll; \\\n";
-			} else if(returnFloat) {
-				stream << "return result.i; \\\n";
-			} else if(returnVoid) {
-				stream << "return 0; \\\n";
-			}
+
 			stream << "} \\\n";
 			stream << "\n";
 
@@ -940,24 +1064,33 @@ void streamIoctlFunction(ostream& stream, const Interface& inf, const Function& 
 	stream << "}\n\n";
 }
 
-void streamCppDefsFile(ostream& stream, const Interface& inf, const vector<Ix>& ixs, int ix) {
+void streamCppDefsFile(ostream& stream, const Interface& inf,
+	const vector<Ix>& ixs, int ix, OutputType ot)
+{
 	string headerName;
 	if(ix == MAIN_INTERFACE)
 		headerName = toupper(getFilenameFromPath(inf.name));
 	else
 		headerName = toupper(ixs[ix].name);
 
+	if(ot == otJni)
+		headerName = "JNI_"+headerName;
+	else if(ot != otC)
+		throwException("Unsupported OutputType");
+
 	stream << "#ifndef " << headerName << "_DEFS_H\n";
 	stream << "#define " << headerName << "_DEFS_H\n\n";
 
 	streamHash(stream, inf);
 
-	streamCppDefs(stream, inf, ix, headerName);
+	streamCppDefs(stream, inf, ix, headerName, ot);
 
 	stream << "#endif\t//" + headerName + "_DEFS_H\n";
 }
 
-void streamCppDefs(ostream& stream, const Interface& inf, int ix, const string& headerName) {
+void streamCppDefs(ostream& stream, const Interface& inf, int ix,
+	const string& headerName, OutputType ot)
+{
 	stream << "#ifndef DONT_WANT_" << headerName << "_TYPEDEFS\n";
 	streamTypedefs(stream, inf.typedefs, ix, true);
 	stream << "#endif\n";
@@ -965,7 +1098,7 @@ void streamCppDefs(ostream& stream, const Interface& inf, int ix, const string& 
 	streamDefines(stream, inf.defines, ix);
 	streamConstants(stream, inf.constSets, ix);
 	streamStructs(stream, inf, ix, true);
-	streamIoctlDefines(stream, inf, headerName, ix, false);
+	streamIoctlDefines(stream, inf, headerName, ix, ot);
 }
 
 void streamInvokeSyscall(ostream& stream, const Interface& maapi, bool java, int argOffset) {
@@ -1322,8 +1455,8 @@ static const char* escapeCSharp(const string& name) {
 	return name.c_str();
 }
 
-size_t streamCSharpOffsets(ostream& stream, const Interface& inf,
-	const Struct& s, size_t offset, int indent)
+size_t streamStructOffsets(ostream& stream, const Interface& inf,
+	const Struct& s, size_t offset, int indent, const string& prefix, StructOffsetType sot)
 {
 	size_t structSize = 0;
 	for(size_t j=0; j<s.members.size(); j++) {
@@ -1336,7 +1469,7 @@ size_t streamCSharpOffsets(ostream& stream, const Interface& inf,
 			if(isAnonStructName(pod.type)) {
 				if(!subStruct)
 					throwException("Struct not found: " + pod.type);
-				memberSize = streamCSharpOffsets(stream, inf, *subStruct, offset, indent);
+				memberSize = streamStructOffsets(stream, inf, *subStruct, offset, indent, prefix + pod.name + "_", sot);
 				max = MAX(max, memberSize);
 				continue;
 			}
@@ -1354,13 +1487,22 @@ size_t streamCSharpOffsets(ostream& stream, const Interface& inf,
 
 			if(subStruct && !array) {
 				streamIndent(stream, indent);
-				stream << "public class "<<escapeCSharp(baseName)<<" {\n";
-				memberSize = streamCSharpOffsets(stream, inf, *subStruct, offset, indent+1);
+				if(sot == sotCS)
+					stream << "public class "<<escapeCSharp(baseName)<<" {\n";
+				memberSize = streamStructOffsets(stream, inf, *subStruct, offset, indent+1, prefix + pod.name + "_", sot);
 				streamIndent(stream, indent);
-				stream << "}\n";
+				if(sot == sotCS)
+					stream << "}\n";
 			} else {
 				streamIndent(stream, indent);
-				stream << "public const int "<<escapeCSharp(baseName)<< " = " <<offset<< ";\n";
+				size_t po = offset;
+				if((offset % 4 == 0) && sot == sotJava)
+					po /= 4;
+				switch(sot) {
+				case sotCS: stream << "public const"; break;
+				case sotJava: stream << "public static final"; break;
+				}
+				stream <<" int "<<prefix<<escapeCSharp(baseName)<< " = " <<po<< ";\n";
 			}
 			max = MAX(max, memberSize);
 		}

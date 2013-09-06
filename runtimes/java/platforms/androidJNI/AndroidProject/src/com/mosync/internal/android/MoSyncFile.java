@@ -40,6 +40,7 @@ import static com.mosync.internal.generated.MAAPI_consts.MA_FERR_GENERIC;
 import static com.mosync.internal.generated.MAAPI_consts.MA_FERR_NOTFOUND;
 import static com.mosync.internal.generated.MAAPI_consts.MA_FERR_FORBIDDEN;
 import static com.mosync.internal.generated.MAAPI_consts.MA_FERR_WRONG_TYPE;
+import static com.mosync.internal.generated.MAAPI_consts.MA_FERR_SORTING_UNSUPPORTED;
 
 /**
  * MoSync File API
@@ -479,7 +480,7 @@ public class MoSyncFile {
 	* The time format is Unix UTC.
 	* \see maTime()
 	*/
-	int maFileDate(int file)
+	long maFileDate(int file)
 	{
 		log("maFileDate ("+file+")");
 		MoSyncFileHandle fileHandle = mFileHandles.get(file);
@@ -488,7 +489,7 @@ public class MoSyncFile {
 			return MA_FERR_NOTFOUND;
 		}
 
-		return (int)(fileHandle.mFile.lastModified() / 1000);
+		return (fileHandle.mFile.lastModified() / 1000);
 	}
 
 	/**
@@ -971,23 +972,12 @@ public class MoSyncFile {
 		return offset;
 	}
 
-	/**
-	* Creates a listing of names of files and directories, or file systems.
-	* Call maFileListNext() repeatedly to retrieve the names.
-	* Call maFileListClose() to free the resources used.
-	*
-	* It is often useful to begin by listing the file systems.
-	*
-	* \param path The full path to a directory, or the empty string,
-	* which specifies that the root file systems should be listed.
-	* \param filter A string to match names with. May include an asterisk ('*')
-	*  wildcard to represent 0 or more characters. Ignored if \a path is empty.
-	*
-	* \returns A File Listing handle, or \< 0 on error.
-	*/
-	int maFileListStart(String path, String filter)
+	int maFileListStart(String path, String filter, int sorting)
 	{
 		log("maFileListStart ");
+
+		if(sorting != 0)
+			return MA_FERR_SORTING_UNSUPPORTED;
 
 		mNumFileListings++;
 

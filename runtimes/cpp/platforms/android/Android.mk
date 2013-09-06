@@ -21,6 +21,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := mosync
 LOCAL_ARM_MODE  := arm
 LOCAL_SRC_FILES := \
+	SyscallImpl.cpp \
+	jniIOCtl.cpp \
+	IOCtl.cpp \
 	../../core/Recompiler/ArmRecompiler.cpp \
 	../../../../intlibs/helpers/platforms/linux/log.cpp \
 	../sdl/FileImpl.cpp \
@@ -29,8 +32,6 @@ LOCAL_SRC_FILES := \
 	AndroidHelpers.cpp \
 	EventQueue.cpp \
 	JNIStrConv.cpp \
-	SyscallImpl.cpp \
-	IOCtl.cpp \
 	../../base/FileStream.cpp \
 	../../base/MemStream.cpp \
 	../../base/Stream.cpp \

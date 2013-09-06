@@ -14,9 +14,9 @@ work.instance_eval do
 	@SOURCES = [name]
 	@NAME = name
 	@EXTRA_INCLUDES = ['.']
-	@LIBRARIES = ['mautil', 'mtxml', 'mafs']
+	@LIBRARIES = ['mautil', 'mtxml', 'mafs', 'nativeui']
 	@EXTRA_LINKFLAGS = ' -heapsize 386 -stacksize 64'
-	@PACK_PARAMETERS = ' --s60v3uid E1234512 --debug --permissions "Internet Access"'
+	@PACK_PARAMETERS = ' --s60v3uid E1234512 --debug --permissions "Internet Access,Bluetooth"'
 end
 
 work.invoke

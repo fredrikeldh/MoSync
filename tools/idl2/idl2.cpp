@@ -204,12 +204,17 @@ int main() {
 
 		copy("Output/constSets.h", "../../intlibs/helpers/");
 
+		_mkdir("../../runtimes/cpp/platforms/android/generated");
+
+		copy("Output/JNI_defs.h", "../../runtimes/cpp/platforms/android/generated");
+
 		for(size_t i=0; i<ixs.size(); i++) {
 			const string& name(ixs[i].name);
 			copy("Output/CPP_" + name + ".h", "../../intlibs/helpers/");
 			copy("Output/" + name + ".h", "../../libs/MAStd/");
 			copy("Output/" + name + ".h", "../../libs/newlib/libc/sys/mosync/");
 			copy("Output/" + name + "_CONSTS.h", "../../runtimes/java/Shared/generated/");
+			copy("Output/JNI_" + name + ".h", "../../runtimes/cpp/platforms/android/generated");
 
 			// Copy generated Android files.
 			copy("Output/" + name + ".java",
@@ -256,8 +261,11 @@ static vector<Ix> readExtensions(const char* filename) {
 static void outputMaapi(const vector<Ix>& ixs, const Interface& maapi) {
 	// Generate files for the main API.
 	{
-		ofstream ccpDefsFile("Output/cpp_defs.h");
-		streamCppDefsFile(ccpDefsFile, maapi, ixs, MAIN_INTERFACE);
+		ofstream cppDefsFile("Output/cpp_defs.h");
+		streamCppDefsFile(cppDefsFile, maapi, ixs, MAIN_INTERFACE, otC);
+
+		ofstream jniDefsFile("Output/JNI_defs.h");
+		streamCppDefsFile(jniDefsFile, maapi, ixs, MAIN_INTERFACE, otJni);
 
 		outputConsts("Output/MAAPI_consts.h", maapi, MAIN_INTERFACE);
 
@@ -269,14 +277,17 @@ static void outputMaapi(const vector<Ix>& ixs, const Interface& maapi) {
 		// the Android runtime).
 		string className = "MAAPI_consts";
 		ofstream javaFile(("Output/" + className + ".java").c_str());
-		streamJavaDefinitionFile(javaFile, className, maapi, MAIN_INTERFACE);
+		streamJavaDefinitionFile(javaFile, className, maapi, ixs, MAIN_INTERFACE);
 	}
 
 	// Generate files for API extensions.
 	for (size_t i=0; i<ixs.size(); i++) {
 		const string& name(ixs[i].name);
-		ofstream ccpDefsFile(("Output/CPP_" + toupper(name) + ".h").c_str());
-		streamCppDefsFile(ccpDefsFile, maapi, ixs, i);
+		ofstream cppDefsFile(("Output/CPP_" + toupper(name) + ".h").c_str());
+		streamCppDefsFile(cppDefsFile, maapi, ixs, i, otC);
+
+		ofstream jniDefsFile(("Output/JNI_" + toupper(name) + ".h").c_str());
+		streamCppDefsFile(jniDefsFile, maapi, ixs, i, otJni);
 
 		outputConsts("Output/" + toupper(name) + "_CONSTS.h", maapi, i);
 
@@ -287,7 +298,7 @@ static void outputMaapi(const vector<Ix>& ixs, const Interface& maapi) {
 		// the Android runtime).
 		string className = toupper(name);
 		ofstream javaFile(("Output/" + className + ".java").c_str());
-		streamJavaDefinitionFile(javaFile, className, maapi, i);
+		streamJavaDefinitionFile(javaFile, className, maapi, ixs, i);
 	}
 }
 
@@ -444,7 +455,7 @@ static void outputMaapiCSharp(const vector<Ix>& ixs, const Interface& maapi) {
 		if(isAnonStructName(s.name))
 			continue;
 		maapiFile << "\tpublic class "<<s.name<<" {\n";
-		streamCSharpOffsets(maapiFile, maapi, s, 0, 2);
+		streamStructOffsets(maapiFile, maapi, s, 0, 2, "", sotCS);
 		maapiFile << "\t}\n";
 	}
 	maapiFile << "}\n\n";
@@ -723,7 +734,7 @@ static void outputMaapiCSharpWP8(const vector<Ix>& ixs, const Interface& maapi) 
 		if(isAnonStructName(s.name))
 			continue;
 		maapiFile << "\tpublic class "<<s.name<<" {\n";
-		streamCSharpOffsets(maapiFile, maapi, s, 0, 2);
+		streamStructOffsets(maapiFile, maapi, s, 0, 2, "", sotCS);
 		maapiFile << "\t}\n";
 	}
 	maapiFile << "}\n\n";
@@ -1056,7 +1067,7 @@ static void outputConsts(const string& filename, const Interface& inf, int ix) {
 	}
 
 	streamConstants(stream, inf.constSets, ix);
-	streamIoctlDefines(stream, inf, def, ix, true);
+	streamIoctlDefines(stream, inf, def, ix, otJava);
 
 	stream << "#endif\t//" << def << "\n";
 }

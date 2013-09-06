@@ -28,6 +28,7 @@ void scan();
 extern "C" int MAMain() GCCATTRIB(noreturn);
 extern "C" int MAMain() {
 	InitConsole();
+	printf("Hello World!\n");
 	gConsoleLogging = 1;
 	scan();
 	Freeze(0);
@@ -51,7 +52,7 @@ scan_devices:
 
 	printf("DevDisc...\n");
 	int startTime = maGetMilliSecondCount();
-	res = maBtStartDeviceDiscovery(1);
+	res = maBtStartDeviceDiscovery(1, MA_BTDD_LOW_ENERGY);
 	printf("Started %i\n", res);
 
 	while(true) {
@@ -86,7 +87,7 @@ scan_devices:
 		if(event.type == EVENT_TYPE_BT && event.state != 0)
 			break;
 		if(event.type == EVENT_TYPE_CLOSE ||
-			(event.type == EVENT_TYPE_KEY_PRESSED && (event.key == MAK_0 || event.key == MAK_KP0)))
+			(event.type == EVENT_TYPE_KEY_PRESSED && (event.key == MAK_0 || event.key == MAK_KP0 || event.key == MAK_BACK)))
 		{
 			maExit(0);
 		}
@@ -98,7 +99,7 @@ scan_devices:
 		maWait(0);
 		maGetEvent(&event);
 		if(event.type == EVENT_TYPE_CLOSE ||
-			(event.type == EVENT_TYPE_KEY_PRESSED && (event.key == MAK_0 || event.key == MAK_KP0)))
+			(event.type == EVENT_TYPE_KEY_PRESSED && (event.key == MAK_0 || event.key == MAK_KP0 || event.key == MAK_BACK)))
 		{
 			maExit(0);
 		}
@@ -177,7 +178,7 @@ scan_devices:
 				break;
 		}
 		if(event.type == EVENT_TYPE_CLOSE ||
-			(event.type == EVENT_TYPE_KEY_PRESSED && (event.key == MAK_0 || event.key == MAK_KP0)))
+			(event.type == EVENT_TYPE_KEY_PRESSED && (event.key == MAK_0 || event.key == MAK_KP0 || event.key == MAK_BACK)))
 		{
 			maExit(0);
 		}
