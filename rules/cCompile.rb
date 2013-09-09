@@ -198,6 +198,10 @@ class CCompileWork < FileTask
 		cfiles = collect_source_files('.c')
 		@cppfiles = collect_source_files('.cpp') + collect_source_files('.cc') + collect_source_files('.C')
 
+		if(HOST == :darwin)
+			@cppfiles += collect_source_files('.mm')
+		end
+
 		sfiles = []
 		if(@COLLECT_S_FILES)
 			sfiles = collect_source_files('.s')

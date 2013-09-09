@@ -13,10 +13,10 @@ require 'thread'
 module Kernel
 	@@mutex = Mutex.new
 	def puts(str)
-		#@@mutex.synchronize do
+		@@mutex.synchronize do
 			$stdout.write("#{Works.threadName}#{str.strip}\n")
 			$stdout.flush
-		#end
+		end
 	end
 end
 
@@ -69,7 +69,7 @@ class Task
 			e = t.compareWithLogging(self)
 			if(!e)
 				#p self.respond_to?(:name), key, t.name, self.name
-				p key
+				#p key
 				if(CONFIG_PRINT_FILETASK_BACKTRACE)
 					puts "self.backtrace: #{@backtrace.join("\n")}"
 					puts "t.backtrace: #{t.instance_variable_get(:@backtrace).join("\n")}"
@@ -77,6 +77,10 @@ class Task
 				raise "Duplicate variant task detected!"
 			end
 		end
+	end
+
+	def backtrace
+		@backtrace
 	end
 
 	def self.reset
@@ -344,7 +348,13 @@ class Works
 			e = t.compareWithLogging(task)
 			if(!e)
 				#p task.respond_to?(:name), key, t.name, task.name
+				puts "Key start"
 				p key
+				puts "Key end"
+				if(CONFIG_PRINT_FILETASK_BACKTRACE)
+					puts "e.backtrace: #{e.backtrace.join("\n")}"
+					puts "t.backtrace: #{t.backtrace.join("\n")}"
+				end
 				raise "Duplicate variant task detected!"
 			end
 			# duplicate task detected.

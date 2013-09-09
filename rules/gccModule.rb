@@ -107,6 +107,7 @@ public
 			'.cc' => @CPPFLAGS,
 			'.C' => @CPPFLAGS,
 			'.s' => ' -Wa,--gstabs',
+			'.mm' => @CPPFLAGS,
 		}
 	end
 
@@ -159,6 +160,9 @@ public
 		@LIBRARIES.each do |lib|
 			flags += " -l#{lib}"
 		end
+		if(HOST == :darwin)
+			flags += " -L/opt/local/lib -framework Cocoa -framework IOBluetooth -framework Foundation"
+		end
 		raise hell if(@LIBRARIES.uniq.length != @LIBRARIES.length)
 		raise hell if(@object_tasks.uniq.length != @object_tasks.length)
 		return "#{linkerName} -o \"#{@NAME}\" @#{objectsFileName}#{flags}"
@@ -174,14 +178,22 @@ public
 	end
 
 	def preLib
-		preLink
+		# darwin ar doesn't have the "@" option.
+		if(HOST != :darwin)
+			preLink
+		end
 		# ar does not remove out-of-date archive members.
 		# The file must be deleted if we are to get a clean build.
 		FileUtils.rm_f(@NAME)
 	end
 
 	def libCmd
-		return "ar rcs #{@NAME}#{@FLAGS} @#{objectsFileName}"
+		if(HOST == :darwin)
+			of = "\"#{@object_tasks.join("\" \"")}\""
+		else
+			of = "@#{objectsFileName}"
+		end
+		return "ar rcs #{@NAME}#{@FLAGS} #{of}"
 	end
 
 	def postLib

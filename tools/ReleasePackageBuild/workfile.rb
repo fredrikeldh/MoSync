@@ -31,14 +31,6 @@ def copyIndependentFiles()
 	filenames.each do |f|
 		cft(mosyncdir+'/bin/'+f, 'build_package_tools/mosync_bin/'+f)
 	end
-
-	# from osx_bin
-	[
-		'pcab.pl',
-		'pcab.conf.template',
-	].each do |f|
-		cft(mosyncdir+'/bin/'+f, 'build_package_tools/osx_bin/'+f)
-	end
 end
 
 # Populate bin.
@@ -50,7 +42,7 @@ when :darwin
 	cft("#{mosyncdir}/bin/zip", '/usr/bin/zip')
 	cft("#{mosyncdir}/bin/unzip", '/sw/bin/unzip')
 	cft("#{mosyncdir}/bin/openssl", '/opt/local/bin/openssl')
-	cft("#{mosyncdir}/bin/ImageMagick/convert", '/opt/local/bin/convert')
+	#cft("#{mosyncdir}/bin/ImageMagick/convert", '/opt/local/bin/convert')
 
 	DynLibConv.run("/sw/lib", "@loader_path", "#{mosyncdir}/bin/openssl")
 	DynLibConv.run("/opt/local/lib", "@loader_path", "#{mosyncdir}/bin/openssl")
@@ -58,6 +50,14 @@ when :darwin
 	copyIndependentFiles()
 when :linux
 	copyIndependentFiles()
+
+	# from osx_bin
+	[
+		'pcab.pl',
+		'pcab.conf.template',
+	].each do |f|
+		cft(mosyncdir+'/bin/'+f, 'build_package_tools/osx_bin/'+f)
+	end
 else
 	raise "Unsupported HOST: #{HOST}"
 end
