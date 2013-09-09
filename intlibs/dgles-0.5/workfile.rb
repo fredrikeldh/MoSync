@@ -2,7 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-MoSyncDll.new do
+NativeMoSyncDll.new do
 	@SOURCES = ['src']
 	common_libraries = ["OpenGL32", "GlU32"]
 	# -fno-strict-aliasing is added tempporarily to make dgles work in release mode

@@ -4,8 +4,8 @@ Works.registerArgHandler(:CONFIG) do |value|
 	CCompileWork.setConfig(value)
 end
 
-require "#{File.dirname(__FILE__)}/work.rb"
 require "#{File.dirname(__FILE__)}/config.rb"
+require "#{File.dirname(__FILE__)}/work.rb"
 require "#{File.dirname(__FILE__)}/flags.rb"
 require 'fileutils'
 
@@ -242,7 +242,7 @@ class CCompileWork < FileTask
 		if(@TARGET_PLATFORM == :win32)
 			return ''
 		else
-			return 'lib'
+			return ''
 		end
 	end
 

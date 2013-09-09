@@ -1,4 +1,11 @@
+require File.expand_path('../../../../../rules/arg_handler.rb')
+
+Works.registerConstArg(:NATIVE_RUNTIME, false)
+Works.registerConstArg(:FULLSCREEN, false)
+
 require File.expand_path('../../../../../rules/native_mosync.rb')
+
+Works.parseArgs()
 
 module SdlCommon
 def setup_common
@@ -20,7 +27,7 @@ def setup_common
 		@EXTRA_CPPFLAGS = ""
 		@IGNORED_FILES = []
 		@LOCAL_LIBS << "gsm_amr"
-		if(SDL_SOUND)
+		if(HOST_HAS_SDL_SOUND)
 			sound_lib = [ "SDL_sound" ]
 		else
 			sound_lib = []

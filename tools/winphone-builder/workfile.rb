@@ -2,7 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-MoSyncExe.new do
+NativeMoSyncExe.new do
 	@SOURCES = ['.', 'pugixml-1.0/src']
 	@SPECIFIC_CFLAGS = {
 		'pugixml.cpp' => ' -Wno-shadow -Wno-float-equal -Wno-missing-noreturn'

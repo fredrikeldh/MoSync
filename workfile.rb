@@ -6,6 +6,7 @@ require File.expand_path('rules/host.rb')
 require File.expand_path('rules/work.rb')
 require File.expand_path('rules/subdir.rb')
 require File.expand_path('rules/mosync_util.rb')
+require File.expand_path('rules/mosync_exe.rb')
 require File.expand_path('rules/cCompile.rb')
 
 enforceGithooks
@@ -110,6 +111,9 @@ def extensionIncludes
 end
 
 Works.run(false)
+
+target :nil do
+end
 
 target :base do
 	Works.invoke_subdirs(PRE_DIRS)

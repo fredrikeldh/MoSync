@@ -249,6 +249,7 @@ class MultiFileTask < FileTask
 			super(name)
 		end
 		def fileExecute
+			FileUtils.touch @NAME
 		end
 	end
 

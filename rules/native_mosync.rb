@@ -28,10 +28,10 @@ class NativeMoSyncLib < LibWork
 	include NativeMoSyncWork
 end
 
-class MoSyncExe < ExeWork
+class NativeMoSyncExe < ExeWork
 	include NativeMoSyncWork
 end
 
-class MoSyncDll < DllWork
+class NativeMoSyncDll < DllWork
 	include NativeMoSyncWork
 end

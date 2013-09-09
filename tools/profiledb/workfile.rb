@@ -2,7 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = MoSyncExe.new do
+NativeMoSyncExe.new do
 	@SOURCES = ["."]
 	@EXTRA_INCLUDES = ["../../intlibs"]
 	@LOCAL_LIBS = ["profiledb", "filelist"]

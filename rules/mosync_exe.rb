@@ -176,6 +176,8 @@ class Mapip2MxTask < MultiFileTask
 	end
 	def fileExecute
 		sh "#{mosyncdir}/bin/elfStabSld#{cFlags}"
+		# make sure sld file is newer than mx file.
+		FileUtils.touch @sldName
 		execFlags
 	end
 end

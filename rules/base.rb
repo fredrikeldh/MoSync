@@ -13,10 +13,10 @@ require 'thread'
 module Kernel
 	@@mutex = Mutex.new
 	def puts(str)
-		@@mutex.synchronize do
+		#@@mutex.synchronize do
 			$stdout.write("#{Works.threadName}#{str.strip}\n")
 			$stdout.flush
-		end
+		#end
 	end
 end
 
@@ -287,8 +287,24 @@ class Works
 			end
 		end
 
+		# may fix some deadlocks.
+		#puts "wt #{@@waitingThreads}"
+		#@@mutex.synchronize do
+		#	while(@@waitingThreads > 0)
+		#		puts "singal #{@@waitingThreads}"
+		#		@@cond.signal
+		#		Thread.pass
+		#	end
+		#end
+
 		threads.each do |t|
-			t.join
+			begin
+				t.join
+			rescue Exception => e
+				puts "on #{t}: #{e}"
+				puts t.backtrace.join("\n")
+				raise e
+			end
 		end
 
 		puts "multi-processing complete."
@@ -450,6 +466,7 @@ class Works
 		@@tasks = []
 		@@nextTask = 0
 		@@waitingThreads = 0
+		@@startedThreads = 0
 		@@abort = false
 		@@threadNames = {}
 
@@ -460,14 +477,22 @@ class Works
 
 	def self.runThread(i)
 		@@threadNames[Thread.current.object_id] = "#{i} "
+		started = false
 
 		loop do
 			task = nil
 			@@mutex.synchronize do
 				return if(@@abort)
+				if(!started)
+					started = true
+					@@startedThreads += 1
+					#puts "start #{@@startedThreads}"
+				end
 				while(@@tasks.size == @@nextTask)
 					@@waitingThreads += 1
+					#puts "waiting, abort #{@@abort}"
 					@@cond.wait(@@mutex)
+					#puts "wait done, abort #{@@abort}"
 					@@waitingThreads -= 1
 					return if(@@abort)
 				end
@@ -488,9 +513,13 @@ class Works
 					end
 				end
 				# if there are no more tasks, and all other threads are waiting, we're done.
-				if(@@tasks.size == @@nextTask && @@waitingThreads == (@@threadNames.size - 1))
-					@@abort = true
-					@@cond.broadcast
+				if(@@tasks.size == @@nextTask)
+					#puts "wt #{@@waitingThreads}, st #{@@startedThreads}"
+					if(@@waitingThreads == @@startedThreads - 1)
+						@@abort = true
+						#puts "set abort"
+						@@cond.broadcast
+					end
 				end
 			end
 		end

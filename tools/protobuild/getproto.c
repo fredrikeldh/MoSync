@@ -61,27 +61,27 @@ void Show()
 	{
 		int y;
 		unsigned char c;
-			
+
 		for(y=0;y<60;y++)
 		{
 			c = *ThisPtr++;
-	
+
 			if (c == '\t')
 			{
 				printf("\t");
-				continue;	
+				continue;
 			}
-			
-			if (c == '\r')	
+
+			if (c == '\r')
 			{
 				printf("\n");
-				continue;	
+				continue;
 			}
-	
-			if (c == '\n')
-			 	continue;	
 
-			if (c == 0) break;	
+			if (c == '\n')
+				continue;
+
+			if (c == 0) break;
 			printf("%c",c);
 		}
 	}
@@ -134,18 +134,18 @@ char * OpenFile(const char *FileName)
 			printf("Error : Problem opening '%s' test file\n",FileName);
 			ExitApp(0);
 	}
-	
+
 	fseek(InFile,0,SEEK_END);
 	Length = ftell(InFile);
 
 	fseek(InFile,0,SEEK_SET);
-	
+
 	if (Length == 0)
 	{
 		printf("File '%s' Has 0 length",FileName);
 		ExitApp(0);
 	}
-		
+
 	ThisMem = (char *) NewPtrClear((long) Length + 64);
 
 	if (ThisMem == NULL)
@@ -164,7 +164,7 @@ char * OpenFile(const char *FileName)
 }
 
 //****************************************
-//			
+//
 //****************************************
 
 void FreeFile(char *fptr)
@@ -186,14 +186,14 @@ int	 Token(const char *token)
 	int len = strlen(token);
 
 	SkipWhiteSpace();
-	
+
 	if (strncmp(token,FilePtr,len) == 0)
 	{
 		FilePtr += len;
 		SkipWhiteSpace();
 		return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -204,13 +204,13 @@ int	 Token(const char *token)
 int	 String(const char *token)
 {
 	int len = strlen(token);
-	
+
 	if (strncmp(token,FilePtr,len) == 0)
 	{
 		FilePtr += len;
 		return 1;
 	}
-	
+
 	return 0;
 }
 //****************************************
@@ -218,11 +218,11 @@ int	 String(const char *token)
 //****************************************
 
 void SkipToken(char *token)
-{	
+{
 	FilePtr += strlen(token);
 	SkipWhiteSpace();
 	return;
-	
+
 }
 //****************************************
 //
@@ -242,8 +242,8 @@ void NeedToken(char *token)
 //****************************************
 
 int NextToken(const char *token)
-{	
-	return strncmp(token,FilePtr,strlen(token)) == 0;	
+{
+	return strncmp(token,FilePtr,strlen(token)) == 0;
 }
 
 //****************************************
@@ -257,7 +257,7 @@ void SkipL()
 	while (1)
 	{
 		c = *FilePtr++;
-		
+
 		//INCLINE(c);
 
 		if (c == 0x0d || c == 0x0a || c == 0x00)
@@ -324,17 +324,17 @@ void SkipDefines()
 		SkipWhiteSpace();
 
 		rep = 0;
-				
+
 		while (1)
 		{
 			c = *FilePtr++;
-				
+
 			if (c == '\\')
 				rep = 1;
-			
+
 			if (c == 0x00)
 				return;
-				
+
 			if (c == 0x0d || c == 0x0a)
 				break;
 		}
@@ -359,7 +359,7 @@ void SkipC()
 		c = *FilePtr++;
 
 		INCLINE(c);
-			
+
 		if (c == '*' && *FilePtr == '/')
 			break;
 
@@ -392,7 +392,7 @@ void SkipWhiteSpace()
 			INCLINE(*FilePtr);
 			FilePtr++;
 		}
-		
+
 		if (*FilePtr == '/' && *(FilePtr+1) == '/')
 		{
 			if (String("//#public"))
@@ -412,11 +412,11 @@ void SkipWhiteSpace()
 
 			if (String("///"))
 				GenDocument(FilePtr,1);			// For rems
-				
+
 			SkipL();
 			continue;
 		}
-			
+
 		if (*FilePtr == '/' && *(FilePtr+1) == '*')
 		{
 			SkipC();
@@ -452,7 +452,7 @@ void SkipQuote(char QToken)
 			printf("Expected '%c'",QToken);
 			ExitApp(0);
 		}
-		
+
 		if (token == QToken)
 			break;
 
@@ -466,7 +466,7 @@ void SkipQuote(char QToken)
 
 
 	FilePtr++;
-	//SkipWhiteSpace();	
+	//SkipWhiteSpace();
 
 	return;
 }
@@ -480,7 +480,7 @@ void SkipPair(char LToken,char RToken)
 	int Count;
 	char token;
 	char *StPos = FilePtr;
-	
+
 	pos = FilePtr;
 
 	token = *FilePtr++;
@@ -492,7 +492,7 @@ void SkipPair(char LToken,char RToken)
 	}
 
 	Count = 1;
-	
+
 	while (1)
 	{
 		token = *FilePtr;
@@ -502,12 +502,12 @@ void SkipPair(char LToken,char RToken)
 		if (token == 0)
 		{
 			printf("Expected '%c'",RToken);
-			
+
 			pos = StPos;
-			Show();	
+			Show();
 			ExitApp(0);
 		}
-		
+
 		if (token == LToken)
 			Count++;
 
@@ -522,22 +522,22 @@ void SkipPair(char LToken,char RToken)
 		{
 			SkipPair('(',')');
 			continue;
-		}	
-	
+		}
+
 		if (token == '\'')
 		{
 			SkipQuote(token);
 			continue;
-		}	
+		}
 
 		if (token == '"')
 		{
 			SkipQuote(token);
 			continue;
-		}	
-	
+		}
+
 		FilePtr++;
-		SkipWhiteSpace();	
+		SkipWhiteSpace();
 	}
 
 	FilePtr++;
@@ -561,15 +561,15 @@ void SkipName()
 int main(void)
 {
 	char *ThisFile,*ProtoFile;
-	
+
 //	SIOUXSettings.asktosaveonclose = 0;
 //	SIOUXSettings.columns = 60;
 //	SIOUXSettings.rows = 20;
 //	SIOUXSettings.autocloseonquit = 0;
 
 	printf("ProtoBuilder Prototyper v2.1w\n");
-	printf("© 1996-1999 A.R.Hartley\n");
-	
+	printf("Â© 1996-1999 A.R.Hartley\n");
+
 //	SIOUXSetTitle("\pProtoBuilder");
 
 	OutFile = fopen("PBProto.h","w");
@@ -591,11 +591,11 @@ int main(void)
 
 	setjmp(ErrorJump);
 	EJmp++;
-	
+
 	while(EJmp == 1)
 	{
 		if (ReadFileName() == -1) break;
-		
+
 		if (filename[0] != ';')
 		{
 			printf("Processing '%s'\n",filename);
@@ -644,11 +644,11 @@ int ReadFileName(void)
 			break;
 
 		filename[n++] = c;
-			
+
 		if (n>64)
 			break;
 	}
-	
+
 	filename[n] = 0;
 	return 0;
 }
@@ -660,19 +660,19 @@ int ReadFileName(void)
 long GetType()
 {
 	int Count = 10000;
-	
+
 	while(1)
 	{
 		SkipWhiteSpace();
 		SkipName();
 		SkipWhiteSpace();
-	
+
 		if (!iscsym(*FilePtr))
 			break;
-			
+
 		if (*FilePtr == 0)
 			break;
-			
+
 		if (--Count == 0)
 		{
 			pos = FilePtr;
@@ -692,7 +692,7 @@ long GetType()
 long GetIndLevel()
 {
 		long IndLevel = 0;				// No indirection
-		
+
 		while (Token("*"))				// Sigal a ptr
 			IndLevel++;					// Increase level of indirection
 
@@ -707,8 +707,8 @@ void SkipLine()
 {
 	char c;
 
-	SkipWhiteSpace();	
-	
+	SkipWhiteSpace();
+
 	while(1)
 	{
 		c = *FilePtr++;
@@ -719,7 +719,7 @@ void SkipLine()
 		if (c == ';') break;
 	}
 
-	SkipWhiteSpace();	
+	SkipWhiteSpace();
 
 	return;
 }
@@ -742,32 +742,32 @@ void LogPrototype(char *ThisLine,char *EndPtr)
 	{
 		if (ThisLine == EndPtr)
 			break;
-	
+
 		c = *ThisLine++;
 
-		if (c == '\n')	
+		if (c == '\n')
 		{
-			continue;	
+			continue;
 		}
-	
+
 		if (c == '\r')
 		{
 			fprintf(OutFile,"\n");
 			if (Public) fprintf(PubOutFile,"\n");
 			continue;
 		}
-			
+
 		if (c == 0)
 			break;
 
 		fprintf(OutFile,"%c",c);
 		if (Public) fprintf(PubOutFile,"%c",c);
-		
+
 	}
 
 	fprintf(OutFile,";\n");
 	if (Public) fprintf(PubOutFile,";\n");
-	
+
 	Public = 0;
 	return;
 }
@@ -779,25 +779,25 @@ void LogPrototype(char *ThisLine,char *EndPtr)
 void WarnPrototype(char *ThisLine,char *EndPtr)
 {
 	char c;
-	
+
 	printf("\nWarning : prototype defined, in '%s' Line %ld\n",filename,LineNum);
-	
+
 	while(1)
 	{
 		if (ThisLine == EndPtr)
 			break;
-	
+
 		c = *ThisLine++;
 
-		if (c == '\n')	
+		if (c == '\n')
 		{
 			printf("\n");
-			continue;	
+			continue;
 		}
-	
-		if (c == '\r')	
-				continue;	
-			
+
+		if (c == '\r')
+				continue;
+
 		if (c == 0)
 				break;
 
@@ -814,7 +814,7 @@ void WarnPrototype(char *ThisLine,char *EndPtr)
 //**********************************
 
 void MakeProtos(void)
-{	
+{
 	char *ThisLine,*EndLine;
 
 	LineNum = 1;
@@ -822,18 +822,18 @@ void MakeProtos(void)
 	while(1)
 	{
 		SkipWhiteSpace();
-		
+
 		if (*FilePtr == 0)			// Done
 			return;
-	
+
 		if (NextToken("#"))				// Test for Directive statements
 		{
 			SkipDefines();				// Skip them
 			continue;
 		}
-	
+
 		ThisLine = FilePtr;				// save start of line
-	
+
 		GetType();						// Grab all type data
 		GetIndLevel();					// grab indirection data
 		SkipName();
@@ -866,8 +866,8 @@ void MakeProtos(void)
 					Public = 0;
 			}
 		}
-		
+
 		SkipLine();
-		
+
 	}
 }

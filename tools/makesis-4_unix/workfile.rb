@@ -2,7 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-class SisWork < MoSyncExe
+class SisWork < NativeMoSyncExe
 	def init
 		@SOURCES = ["src"]
 		@EXTRA_INCLUDES = ["include", "src"]
@@ -11,7 +11,7 @@ class SisWork < MoSyncExe
 		@SPECIFIC_CFLAGS = {
 			#'sisfilegen.cpp' => ' -fpermissive -Wno-error'
 		}
-		if(!@GCC_IS_V4 && CONFIG == "")	#buggy compiler, I think.
+		if(!@GCC_IS_V4 && @CONFIG == "release")	#buggy compiler, I think.
 			@SPECIFIC_CFLAGS['crc.c'] = ' -Wno-unreachable-code'
 		end
 		@LIBRARIES = ["z", "crypto"]
@@ -19,21 +19,18 @@ class SisWork < MoSyncExe
 	end
 end
 
-makesis = SisWork.new
-makesis.instance_eval do
+SisWork.new do
 	init
 	@IGNORED_FILES += ["signsis.cpp"]
 	@NAME = "makesis-4"
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-signsis = SisWork.new
-signsis.instance_eval do
+SisWork.new do
 	init
 	@IGNORED_FILES += ["makesis.cpp"]
 	@NAME = "signsis-4"
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-makesis.invoke
-signsis.invoke
+Works.run

@@ -2,13 +2,12 @@
 
 require File.expand_path('../../../../rules/arg_handler.rb')
 
-Works.registerArgHandler(:NATIVE_RUNTIME) do |value|
-	NATIVE_RUNTIME = value
-end
+Works.registerConstArg(:NATIVE_RUNTIME, false)
+Works.registerConstArg(:FULLSCREEN, false)
 
 require File.expand_path('../../../../rules/native_mosync.rb')
 
-default_const(:NATIVE_RUNTIME, false)
+Works.parseArgs()
 
 NativeMoSyncLib.new do
 	@SOURCES = [".", "./thread", "./Skinning", "../../base", "../../base/thread",
@@ -32,14 +31,14 @@ NativeMoSyncLib.new do
 		@IGNORED_FILES << "strptime.c"
 		#@IGNORED_FILES << "OpenGLES.cpp"
 		#@IGNORED_FILES << "OpenGLES2.cpp"
-		if (!SDL_SOUND)
+		if (!HOST_HAS_SDL_SOUND)
 			@EXTRA_CPPFLAGS += " -D__NO_SDL_SOUND__"
 			@IGNORED_FILES += ["SDLSoundAudioSource.cpp"]
 		end
-		if(FULLSCREEN == "true")
+		if(FULLSCREEN)
 			@EXTRA_CPPFLAGS += " -D__USE_FULLSCREEN__ -D__USE_SYSTEM_RESOLUTION__"
 		end
-		if(NATIVE_RUNTIME == "true")
+		if(NATIVE_RUNTIME)
 			@IGNORED_FILES += ["PIMImpl.cpp", "pim.cpp"]
 		end
 		@EXTRA_INCLUDES = common_includes

@@ -4,7 +4,7 @@ require File.expand_path('../shared_work.rb')
 
 # todo: make sure only syscalls are exported.
 
-MoSyncDll.new do
+NativeMoSyncDll.new do
 	extend SdlCommon
 	setup_common
 

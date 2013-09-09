@@ -108,7 +108,6 @@ LocalFiles.bin*
 /libs/MAStd/maapi.h
 /libs/MAStd/maapi_defs.h
 /libs/MAUI-revamp/DefaultSkin.h
-/libs/MTXml/entities.c
 /libs/newlib/libc/sys/mosync/maapi.h
 /libs/newlib/libc/sys/mosync/maapi_defs.h
 

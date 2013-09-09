@@ -191,7 +191,7 @@ int recurse_directory(const char *file, int *n)
 	}
 
 	/* add to inputfiles here, we don't want a dir to be added, we're just interested in the files */
-	inputfiles[i] = realloc(inputfiles[i], (i + 2) * sizeof(char *));
+	inputfiles[i] = (char*)realloc(inputfiles[i], (i + 2) * sizeof(char *));
 	inputfiles[i++] = strdup(buf);
     }
 
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
 			continue;
 	    	}
 
-	    	inputfiles[i] = realloc(inputfiles[i], (i + 2) * sizeof(char *));
+	    	inputfiles[i] = (char*)realloc(inputfiles[i], (i + 2) * sizeof(char *));
 	    	inputfiles[i++] = strdup(argv[optind]);
 	}
 

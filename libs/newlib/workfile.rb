@@ -17,25 +17,20 @@ MoSyncLib.new do
 		"libc/misc", "libc/unix", "libc/posix", "libc/locale", "libc/reent", "libc/stdio",
 		"libc/search", "libc/stdlib", "libc/string", "libc/time", "libc/ctype", "libc/errno",
 		"libm/math", "libm/common", "../ResCompiler"]
-	@SOURCE_FILES = [
-		'../MAStd/inet_ntop.c',
-	]
 	@EXTRA_INCLUDES = ["libc/include", "libc/sys/mosync", "libm/common"]
 
 	@SOURCES << 'libc/sys/mosync/libgcc'
 
-	if(USE_GNU_BINUTILS)
-		@IGNORED_FILES << 'crtlib.s'
-		@SOURCE_FILES << '../MAStd/intrinsics.c'
-		@SOURCE_FILES << '../MAStd/madmath.c'
-	else
-		@EXTRA_OBJECTS = [FileTask.new(self, 'libc/sys/mosync/crtlib.s')]
-	end
+	@SOURCE_FILES << '../MAStd/intrinsics.c'
+	@SOURCE_FILES << '../MAStd/madmath.c'
+	@SOURCE_FILES << '../MAStd/inet_ntop.c'
 
 	@IGNORED_FILES << 'engine.c'
 	@IGNORED_FILES << 'rename.c'
 	@IGNORED_FILES << 'memset.c'
 	@IGNORED_FILES << 'memcpy.c'
+	@IGNORED_FILES << 'strcmp.c'
+	@IGNORED_FILES << 'strcpy.c'
 
 	@EXTRA_CFLAGS = " -DUSE_EXOTIC_MATH -Wno-float-equal -Wno-unreachable-code -Wno-sign-compare -Wno-old-style-definition -Wno-c++-compat"
 	if(@CONFIG=="release")

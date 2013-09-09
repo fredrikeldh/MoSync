@@ -27,7 +27,7 @@ def copyIndependentFiles()
 		'MoSyncOnlineDocs.URL',
 		'javame/JadTool.jar',
 	]
-	DirTask.new(nil, mosyncdir+'/bin/javame').invoke
+	DirTask.new(mosyncdir+'/bin/javame')
 	filenames.each do |f|
 		cft(mosyncdir+'/bin/'+f, 'build_package_tools/mosync_bin/'+f)
 	end

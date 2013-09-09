@@ -5,7 +5,7 @@ require File.expand_path('../../rules/native_mosync.rb')
 NativeMoSyncLib.new do
 	if(HOST == :linux)
 		@SOURCES = [".", "linux", "linux/bluez"]
-		if(BLUETOOTH)
+		if(HOST_HAS_BLUETOOTH)
 			@EXTRA_CPPFLAGS = " -DBLUEZ_SUPPORTED"
 		else
 			#error "libbluetooth-dev missing!"

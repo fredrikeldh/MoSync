@@ -7,7 +7,7 @@ LibWork.new do
 		@SOURCE_FILES = ["filelist-win32.c"]
 	elsif(HOST == :linux)
 		@SOURCE_FILES = ["filelist-linux.c"]
-		if(CONFIG == 'release')
+		if(@CONFIG == 'release')
 			# bug in /usr/include/bits/stdlib.h
 			@EXTRA_CFLAGS = " -Wno-unreachable-code"
 		end

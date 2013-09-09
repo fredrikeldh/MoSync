@@ -13,7 +13,7 @@ class WindresTask < FileTask
 	end
 end
 
-MoSyncExe.new do
+NativeMoSyncExe.new do
 	extend SdlCommon
 	setup_common
 

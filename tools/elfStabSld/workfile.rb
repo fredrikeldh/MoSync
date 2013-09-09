@@ -60,7 +60,7 @@ class GenRegnamesTask < FileTask
 	end
 end
 
-MoSyncExe.new do
+NativeMoSyncExe.new do
 	@SOURCES = ['.']
 	@SOURCE_FILES = [
 		'../../runtimes/cpp/platforms/sdl/FileImpl.cpp',

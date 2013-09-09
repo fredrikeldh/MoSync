@@ -2,7 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-MoSyncExe.new do
+NativeMoSyncExe.new do
 	@SOURCES = ["."]
 	@LOCAL_LIBS = ["filelist"]
 
