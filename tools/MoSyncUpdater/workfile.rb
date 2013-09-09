@@ -3,7 +3,7 @@
 require File.expand_path('../../rules/native_mosync.rb')
 require File.expand_path('../../rules/mosync_util.rb')
 
-MoSyncExe.new do
+NativeMoSyncExe.new do
 	@SOURCES = ["."]
 	@EXTRA_CPPFLAGS = ""
 

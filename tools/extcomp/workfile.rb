@@ -2,8 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+NativeMoSyncExe.new do
 	@SOURCES = ["."]
 	@NAME = "extcomp"
 	@TARGETDIR = "."
@@ -16,4 +15,4 @@ work.instance_eval do
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-work.invoke
+Works.run

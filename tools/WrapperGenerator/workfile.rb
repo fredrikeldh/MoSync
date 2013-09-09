@@ -1,11 +1,9 @@
 #!/usr/bin/ruby
 
 require File.expand_path('../../rules/native_mosync.rb')
-require File.expand_path('../../rules/targets.rb')
 require File.expand_path('../../rules/host.rb')
 
-work = MoSyncExe.new
-work.instance_eval do 
+NativeMoSyncExe.new  do
 	@SOURCES = ["."]
 	@EXTRA_INCLUDES = []
 	if(HOST == :win32) then
@@ -17,13 +15,7 @@ work.instance_eval do
 	@TARGETDIR = '.'
 	@EXTRA_CFLAGS = " -Wno-format -Wno-missing-format-attribute ";
 	@EXTRA_CPPFLAGS = " -Wno-format -Wno-missing-format-attribute ";
-
 end
-
-target :default do
-	work.invoke
-end
-
 
 # run the WG on one header file. copy the results to designated areas.
 class WGComboTask < Task
@@ -31,7 +23,7 @@ class WGComboTask < Task
 		super(work)
 		@src = FileTask.new(work, src)
 	end
-	
+
 	class WGTask < FileTask
 		def initialize(work, name, src)
 			super(work, name)
@@ -42,11 +34,11 @@ class WGComboTask < Task
 			sh "#{@work.target} #{@src}"
 		end
 	end
-	
+
 	def wg(dst)
 		return WGTask.new(@work, dst, @src)
 	end
-	
+
 	def setup
 		cpp = wg(@src.to_s+'.cpp')
 		idl = wg(@src.to_s+'.idl')
@@ -60,10 +52,8 @@ class WGComboTask < Task
 	end
 end
 
-target :compile => :default do
-	wct = WGComboTask.new(work, 'tests/gl.h')
-	wct.setup
-	wct.invoke
+target :compile do
+	WGComboTask.new('tests/gl.h')
 end
 
-Targets.invoke
+Works.run

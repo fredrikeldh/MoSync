@@ -2,8 +2,7 @@
 
 require File.expand_path('../../rules/native_mosync.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+NativeMoSyncExe.new do
 	@SOURCES = ["."]
 	@EXTRA_SOURCEFILES = ["../pipe-tool/disas.c", "../../libs/MAUtil/RefCounted.cpp",
 		"../../intlibs/helpers/TranslateSyscall.cpp", "../../intlibs/helpers/intutil.cpp"]
@@ -36,19 +35,16 @@ work.instance_eval do
 end
 
 class OpGenTask < FileTask
-	def setup
-		@prerequisites = [FileTask.new(@work, "operationsGen.rb"), FileTask.new(@work, "../../intlibs/stabs/types.rb")]
+	def initialize(name)
+		@prerequisites = [FileTask.new("operationsGen.rb"), FileTask.new("../../intlibs/stabs/types.rb")]
+		super(name)
 	end
-	def execute
+	def fileExecute
 		sh "ruby operationsGen.rb"
 	end
 end
 
-gen = OpGenTask.new(work, "operations_generated.h")
-gen.setup
-gen.invoke
-gen = OpGenTask.new(work, "operations_generated.cpp")
-gen.setup
-gen.invoke
+OpGenTask.new("operations_generated.h")
+OpGenTask.new("operations_generated.cpp")
 
-work.invoke
+Works.run

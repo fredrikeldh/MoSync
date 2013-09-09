@@ -3,7 +3,7 @@
 require File.expand_path('../../rules/native_mosync.rb')
 require File.expand_path('../../rules/mosync_util.rb')
 
-class SisWork < MoSyncExe
+class SisWork < NativeMoSyncExe
 	def init
 		@SOURCES = ["src"]
 		@EXTRA_INCLUDES = ["include", "src"]

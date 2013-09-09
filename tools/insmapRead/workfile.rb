@@ -3,8 +3,7 @@
 require File.expand_path('../../rules/native_mosync.rb')
 require File.expand_path('../../rules/mosync_util.rb')
 
-work = MoSyncExe.new
-work.instance_eval do
+NativeMoSyncExe.new do
 	@SOURCES = ['.']
 	@EXTRA_SOURCEFILES = [
 		'../../runtimes/cpp/platforms/sdl/FileImpl.cpp',
@@ -29,4 +28,4 @@ work.instance_eval do
 	@INSTALLDIR = mosyncdir + '/bin'
 end
 
-work.invoke
+Works.run
