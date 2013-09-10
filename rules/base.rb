@@ -11,11 +11,45 @@ require 'thread'
 # write seems safer.
 # update: not even write() was thread-safe. time for a mutex.
 module Kernel
-	@@mutex = Mutex.new
 	def puts(str)
-		@@mutex.synchronize do
-			$stdout.write("#{Works.threadName}#{str.strip}\n")
+		Putser.puts(str)
+	end
+end
+
+class Putser
+	@@mutex = Mutex.new
+	@@cond = ConditionVariable.new
+	@@stdoutLines = []
+	def self.puts(str)
+		tn = Works.threadName
+		if(!tn)
+			$stdout.write("#{str.strip}\n")
 			$stdout.flush
+			return
+		end
+		@@mutex.synchronize do
+			@@stdoutLines << "#{tn}#{str.strip}\n"
+			@@cond.signal
+		end
+	end
+	def self.waitPuts
+		@@mutex.synchronize do
+			while(true)
+				@@stdoutLines.each do |line|
+					$stdout.write(line)
+				end
+				@@stdoutLines = []
+				$stdout.flush
+				return if(Works.threadsFinished)
+				@@cond.wait(@@mutex)
+			end
+		end
+	end
+	def self.signalPuts
+		@@mutex.synchronize do
+			#$stdout.write("signalPuts\n")
+			#$stdout.flush
+			@@cond.signal
 		end
 	end
 end
@@ -288,18 +322,12 @@ class Works
 					end
 				end
 				#puts "End thread #{i}"
+				@@threadNames.delete(Thread.current.object_id)
+				Putser.signalPuts
 			end
 		end
 
-		# may fix some deadlocks.
-		#puts "wt #{@@waitingThreads}"
-		#@@mutex.synchronize do
-		#	while(@@waitingThreads > 0)
-		#		puts "singal #{@@waitingThreads}"
-		#		@@cond.signal
-		#		Thread.pass
-		#	end
-		#end
+		Putser.waitPuts
 
 		threads.each do |t|
 			begin
@@ -314,6 +342,11 @@ class Works
 		puts "multi-processing complete."
 		exit(1) if(@@error)
 		reset
+	end
+
+	def self.threadsFinished
+		#puts "#{@@startedThreads} #{@@threadNames.size}"
+		return (@@startedThreads > 0) && (@@threadNames.size == 0)
 	end
 
 	def self.add(task)
