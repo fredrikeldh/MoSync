@@ -9,8 +9,7 @@ ARGV.delete_at(0)
 
 require File.expand_path('../rules/mosync_exe.rb')
 
-work = PipeExeWork.new
-work.instance_eval do
+MoSyncExe.new do
 	@SOURCES = [name]
 	@NAME = name
 	@EXTRA_INCLUDES = ['.']
@@ -19,4 +18,4 @@ work.instance_eval do
 	@PACK_PARAMETERS = ' --s60v3uid E1234512 --debug --permissions "Internet Access,Bluetooth"'
 end
 
-work.invoke
+Works.run

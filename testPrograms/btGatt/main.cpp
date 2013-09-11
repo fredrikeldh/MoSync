@@ -21,6 +21,7 @@ class MyMoblet : public Moblet, BluetoothDeviceDiscoveryListener
 public:
 	MyMoblet()
 	{
+		mConnected = false;
 #if 1
 		//Calculate the font size
 		MAExtent ex = maGetScrSize();
@@ -43,7 +44,8 @@ public:
 		//addCustomEventListener(this);
 
 #if 1
-		static const MABtAddr sDeviceAddress = {{0xBC,0x6A,0x29,0xAC,0x16,0xE6}};
+		//static const MABtAddr sDeviceAddress = {{0xBC,0x6A,0x29,0xAC,0x16,0xE6}};
+		static const MABtAddr sDeviceAddress = {{0xBC,0x6A,0x29,0xAB,0x39,0x69}};
 #define DEVICE_ADDRESS sDeviceAddress
 #endif
 
@@ -110,7 +112,7 @@ public:
 			printf("connect: %i %i\n", event.gatt.status, event.gatt.connected);
 			if(event.gatt.connected && !mConnected) {
 				TEST_ONE(maGattFetchServices(mDevice));
-				TEST_ONE(maGattFetchRssi(mDevice));
+				//TEST_ONE(maGattFetchRssi(mDevice));
 			}
 			mConnected = event.gatt.connected != 0;
 			break;
@@ -124,8 +126,9 @@ public:
 		case MAGATT_EVENT_CHAR_READ:
 			mCharReadCount++;
 			printf("CharRead %i\n", event.gatt.status);
-			if(mCharReadCount == mNamedServices) {
+			if(mCharReadCount == mNamedServices && mNamedServices > 0) {
 				dumpServiceNames();
+				mNamedServices = 0;
 			}
 			break;
 		default:
@@ -168,7 +171,7 @@ public:
 				}
 			}
 		}
-		printf("%i named services...\n", mNamedServices);
+		printf("%i named services.\n", mNamedServices);
 	}
 
 	void dumpServiceNames() {

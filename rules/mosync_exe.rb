@@ -1,8 +1,21 @@
 # Include this file when building MoSync code.
 
+require "#{File.dirname(__FILE__)}/arg_handler.rb"
+require "#{File.dirname(__FILE__)}/cExe.rb"
+
+class MoSyncExe < ExeWork
+	@@PACK = false
+	def self.setPack(v)
+		@@PACK = v
+	end
+end
+
+Works.registerArgHandler(:PACK) do |value|
+	MoSyncExe.setPack(value)
+end
+
 require "#{File.dirname(__FILE__)}/mosync_config.rb"
 require "#{File.dirname(__FILE__)}/mosync.rb"
-require "#{File.dirname(__FILE__)}/cExe.rb"
 require "#{File.dirname(__FILE__)}/mosyncGccModule.rb"
 require "#{File.dirname(__FILE__)}/mosync_resources.rb"
 
@@ -80,6 +93,12 @@ class MoSyncExe < ExeWork
 	def initialize(compilerModule = DefaultMoSyncCCompilerModule, &block)
 		super(compilerModule) do
 			instance_eval(&block)
+			if(@@PACK)
+				default(:MOSYNC_PROFILE, @@PACK)
+			end
+
+			@appName = @NAME.clone
+
 			# String, GCC flags describing the default include directories.
 			default(:DEFAULT_INCLUDES, " -I\"#{mosync_include}\"")
 			# String, name of target device profile.
@@ -140,9 +159,45 @@ class MoSyncExe < ExeWork
 			@mxLinkFlags = @EXTRA_LINKFLAGS
 			@EXTRA_LINKFLAGS = ''
 		end
+
 		@mxTask = Mapip2MxTask.new(self, @mxLinkFlags)
 		Works.setDefaultTarget(:run) do
 			sh emuCommandLine
+		end
+
+		if(@@PACK)
+			default(:PACK_MODEL, @@PACK)
+			default(:PACK_VERSION, '1.0')
+			default(:PACK_ICON, mosyncdir+'/etc/default.icon')
+			default(:PACK_IOS_CERT, 'iPhone developer')
+			default(:PACK_CPP_OUTPUT, @BUILDDIR)
+			default(:PACK_ANDROID_PACKAGE, "com.mosync.app_#{@appName}")
+			default(:PACK_ANDROID_VERSION_CODE, 1)
+			default(:PACK_ANDROID_KEYSTORE, mosyncdir+'/etc/mosync.keystore')
+			default(:PACK_ANDROID_STOREPASS, 'default')
+			default(:PACK_ANDROID_ALIAS, 'mosync.keystore')
+			default(:PACK_ANDROID_KEYPASS, 'default')
+
+			MoSyncPackTask.new(
+				:tempdir => @BUILDDIR_BASE,
+				:buildpath => @BUILDDIR,
+				:model => @PACK_MODEL,
+				:program => @mxTask,
+				:resource => @resourceTask,
+				:name => @appName,
+				:vendor => @VENDOR,
+				:version => @PACK_VERSION,
+				:icon => @PACK_ICON,
+				:iosCert => @PACK_IOS_CERT,
+				:cppOutput => @PACK_CPP_OUTPUT,
+				:androidPackage => @PACK_ANDROID_PACKAGE,
+				:androidVersionCode => @PACK_ANDROID_VERSION_CODE,
+				:androidKeystore => @PACK_ANDROID_KEYSTORE,
+				:androidStorepass => @PACK_ANDROID_STOREPASS,
+				:androidAlias => @PACK_ANDROID_ALIAS,
+				:androidKeypass => @PACK_ANDROID_KEYPASS,
+				:extraParameters => @PACK_PARAMETERS,
+			)
 		end
 	end
 	def targetName()
@@ -179,5 +234,90 @@ class Mapip2MxTask < MultiFileTask
 		# make sure sld file is newer than mx file.
 		FileUtils.touch @sldName
 		execFlags
+	end
+end
+
+def openssl
+	#if(HOST != :win32)
+		return 'openssl'
+	#else
+	#	return "#{mosyncdir}/bin/openssl -config \"#{mosyncdir}/bin/openssl.cnf\""
+	#end
+end
+
+class GenKeyTask < FileTask
+	def fileExecute
+		sh "#{openssl} genrsa -rand -des -passout pass:default -out \"#{@NAME}\" 1024"
+	end
+end
+
+class GenCertTask < FileTask
+	def initialize(name, key, req)
+		@key = key
+		@prerequisites = [key]
+		@requirements = [req]
+		super(name)
+	end
+	def fileExecute
+		sh "#{openssl} req -new -x509 -nodes -sha1 -days 3650"+
+			" -key \"#{@key}\" -batch -out \"#{@NAME}\""
+	end
+end
+
+class EtcDirTask < CopyDirTask
+	def initialize
+		# Copy whatever default_etc files are missing.
+		super(mosyncdir, 'etc', "#{mosyncdir}/bin/default_etc")
+		# Generate default.cert and key.
+		GenCertTask.new("#{mosyncdir}/etc/default.cert",
+			GenKeyTask.new("#{mosyncdir}/etc/default.key"), self)
+	end
+end
+
+# Packs a MoSync program for installation.
+# resource can be nil. all other parameters must be valid.
+class MoSyncPackTask < FileTask
+	def initialize(options = {})
+		@o = options
+		p options
+		@o[:packpath] = @o[:buildpath] + @o[:model] if(!@o[:packpath])
+		@prerequisites = [@o[:program], DirTask.new(@o[:packpath])]
+		@prerequisites << @o[:resource] if(@o[:resource])
+		@prerequisites << EtcDirTask.new
+		@o[:vendor] = 'Built with MoSync' if(!@o[:vendor])
+		super(@o[:packpath] + '/packComplete.empty')
+	end
+	def fileExecute
+		p = File.expand_path(@o[:program])
+		d = File.expand_path(@o[:packpath])
+		co = File.expand_path(@o[:cppOutput])
+		cmd = "#{mosyncdir}/bin/package -p \"#{p}\""
+		if(@o[:resource])
+			r = File.expand_path(@o[:resource])
+			cmd << " -r \"#{r}\""
+		end
+		cmd << " -m \"#{@o[:model]}\""+
+			" -d \"#{d}\" -n \"#{@o[:name]}\" --vendor \"#{@o[:vendor]}\""+
+			" --version #{@o[:version]}"
+		cmd << " --icon \"#{File.expand_path(@o[:icon])}\"" if(@o[:icon])
+		cmd << " --ios-cert \"#{File.expand_path(@o[:iosCert])}\""+
+			" --cpp-output \"#{co}\" --ios-project-only"+
+			" --wp-config release_rebuild"+
+			" --cs-output \"#{co}\""
+		cmd << " --wp-project-only" if(!MSBUILD_PATH)
+		cmd << " --wp-vs-build-path \"#{MSBUILD_PATH}\"" if(MSBUILD_PATH)
+		cmd << " --android-package \"#{@o[:androidPackage]}\""+
+			" --android-version-code \"#{@o[:androidVersionCode]}\""+
+			" --android-keystore \"#{File.expand_path(@o[:androidKeystore])}\""+
+			" --android-storepass \"#{@o[:androidStorepass]}\""+
+			" --android-alias \"#{@o[:androidAlias]}\""+
+			" --android-keypass \"#{@o[:androidKeypass]}\""+
+			" --show-passwords"+
+			" --output-type interpreted"+
+			@o[:extraParameters].to_s
+		FileUtils.cd(@o[:tempdir], :verbose => true) do
+			sh cmd
+		end
+		FileUtils.touch @NAME
 	end
 end

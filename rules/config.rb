@@ -29,6 +29,8 @@ default_const(:CONFIG_SUBDIR_RELOAD, false)
 # This takes significant time, so should only be turned on to debug the workfile system.
 default_const(:CONFIG_CHECK_TASK_INTEGRITY, false)
 
+default_const(:MSBUILD_PATH, nil)
+
 #require "#{File.dirname(__FILE__)}/gccModule.rb"
 
 # The above require would cause a broken requirement loop.

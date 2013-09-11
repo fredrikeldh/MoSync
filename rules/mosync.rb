@@ -3,7 +3,7 @@
 require "#{File.dirname(__FILE__)}/arg_handler.rb"
 
 Works.registerConstArg(:USE_NEWLIB, false)
-Works.registerConstArg(:USE_GNU_BINUTILS, true)
+Works.registerConstArg(:MODE, nil)
 
 require "#{File.dirname(__FILE__)}/mosync_util.rb"
 require "#{File.dirname(__FILE__)}/cCompile.rb"
