@@ -1596,6 +1596,7 @@ interface MAAPI {
 		union {
 			int rssi;
 			int connected;
+			void* data;
 		}
 	}
 

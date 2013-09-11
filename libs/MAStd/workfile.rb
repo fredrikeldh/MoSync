@@ -59,13 +59,9 @@ MoSyncLib.new do
 	@DEFAULT_INCLUDES = ''
 	@SPECIFIC_CFLAGS = @pipe_specific_cflags
 
-	if(USE_GNU_BINUTILS)
-		@IGNORED_FILES << 'e_pow.c'
-		@IGNORED_FILES << 'e_log.c'
-		@IGNORED_FILES << 'e_atan2.c'
-	else
-		@EXTRA_OBJECTS = [FileTask.new("crtlib.s"), FileTask.new("mastack.s")]
-	end
+	@IGNORED_FILES << 'e_pow.c'
+	@IGNORED_FILES << 'e_log.c'
+	@IGNORED_FILES << 'e_atan2.c'
 	@HEADER_DIRS = [
 		'GLES',
 		'GLES2',

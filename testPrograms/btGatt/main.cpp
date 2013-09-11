@@ -90,17 +90,22 @@ public:
 		printf("Device Discovery Finished: %i\n", state);
 	}
 
+	struct MyGattChar {
+		MAGattChar c;
+		Vector<MAGattDesc> d;
+	};
+
 	struct MyGattService {
 		MAGattService s;
-		Vector<MAGattChar> c;
+		Vector<MyGattChar> c;
 	};
 	Vector<MyGattService> mServices;
 
-	// this is the number of MAGATT_EVENT_CHAR_READ events we will expect.
-	int mNamedServices;
+	// this is the number of MAGATT_EVENT_DESC_READ events we will expect.
+	int mNamedChars;
 
-	// this is the number of MAGATT_EVENT_CHAR_READ events we have received.
-	int mCharReadCount;
+	// this is the number of MAGATT_EVENT_DESC_READ events we have received.
+	int mDescReadCount;
 
 	void customEvent(const MAEvent& event) {
 		if(event.type != EVENT_TYPE_GATT)
@@ -123,12 +128,15 @@ public:
 			printf("services: %i\n", event.gatt.status);
 			dumpServices();
 			break;
-		case MAGATT_EVENT_CHAR_READ:
-			mCharReadCount++;
-			printf("CharRead %i\n", event.gatt.status);
-			if(mCharReadCount == mNamedServices && mNamedServices > 0) {
-				dumpServiceNames();
-				mNamedServices = 0;
+		case MAGATT_EVENT_DESC_READ:
+			{
+				MAGattDesc* d = (MAGattDesc*)event.gatt.data;
+				mDescReadCount++;
+				printf("DescRead %i %i\n", event.gatt.status, d->len);
+				if(mDescReadCount == mNamedChars && mNamedChars > 0) {
+					dumpServiceNames();
+					mNamedChars = 0;
+				}
 			}
 			break;
 		default:
@@ -143,10 +151,12 @@ public:
 		TEST_LTZ(sCount);
 		printf("%i services.\n", sCount);
 		mServices.resize(sCount);
-		mNamedServices = 0;
-		mCharReadCount = 0;
+		mNamedChars = 0;
+		mDescReadCount = 0;
+		// do services.
 		for(int i=0; i<sCount; i++) {
-			MAGattService& s(mServices[i].s);
+			MyGattService& ms(mServices[i]);
+			MAGattService& s(ms.s);
 			s.device = mDevice;
 			s.serviceIndex = i;
 			s.inclCount = -1;
@@ -154,39 +164,62 @@ public:
 			TEST_ZERO(maGattService(&s));
 			const int* a = s.uuid.i;
 			printf("s%2i: i%i c%i %08X%08X%08X%08X\n", i, s.inclCount, s.charCount, a[0], a[1], a[2], a[3]);
+
+			// do characteristics.
+
 			// search service's descriptors for one where (uint16)uuid[0] == 0x2901.
 			// its value should be an UTF-8 string describing the service.
-			mServices[i].c.resize(s.charCount);
+			ms.c.resize(s.charCount);
 			for(int j=0; j<s.charCount; j++) {
-				MAGattChar& c(mServices[i].c[j]);
+				MyGattChar& mc(ms.c[j]);
+				MAGattChar& c(mc.c);
 				c.device = mDevice;
 				c.serviceIndex = i;
 				c.charIndex = j;
 				TEST_ZERO(maGattChar(&c));
 				const int* b = c.uuid.i;
-				printf("c%2i: %08X%08X%08X%08X\n", j, b[0], b[1], b[2], b[3]);
-				if((uint16)c.uuid.i[0] == 0x2901) {
-					TEST_ONE(maGattFetchCharValue(&c));
-					mNamedServices++;
+				printf("c%2i: d%i %08X%08X%08X%08X\n", j, c.descCount, b[0], b[1], b[2], b[3]);
+				// do descriptors.
+				mc.d.resize(c.descCount);
+				for(int k=0; k<c.descCount; k++) {
+					MAGattDesc& d(mc.d[k]);
+					d.device = mDevice;
+					d.serviceIndex = i;
+					d.charIndex = j;
+					d.descIndex = k;
+					TEST_ZERO(maGattDesc(&d));
+					const int* e = d.uuid.i;
+					printf("d%2i: %08X%08X%08X%08X\n", k, e[0], e[1], e[2], e[3]);
+
+					if((uint16)e[0] == 0x2901) {
+						TEST_ONE(maGattFetchDescValue(&d));
+						mNamedChars++;
+					}
 				}
 			}
 		}
-		printf("%i named services.\n", mNamedServices);
+		printf("%i named characteristics.\n", mNamedChars);
 	}
 
 	void dumpServiceNames() {
 		for(int i=0; i<mServices.size(); i++) {
-			MAGattService& s(mServices[i].s);
-			const int* a = s.uuid.i;
+			MyGattService& ms(mServices[i]);
+			const int* a = ms.s.uuid.i;
 			printf("%2i: %08X%08X%08X%08X\n", i, a[0], a[1], a[2], a[3]);
-			MAASSERT(mServices[i].c.size() == s.charCount);
-			for(int j=0; j<s.charCount; j++) {
-				MAGattChar& c(mServices[i].c[j]);
-				char buf[c.len+1];
-				c.value = buf;
-				TEST_ZERO(maGattCharValue(&c));
-				buf[c.len] = 0;	// just to be safe.
-				printf("%s\n", buf);
+			MAASSERT(mServices[i].c.size() == ms.s.charCount);
+			for(int j=0; j<ms.s.charCount; j++) {
+				MyGattChar& mc(ms.c[j]);
+				for(int k=0; k<mc.c.descCount; k++) {
+					MAGattDesc& d(mc.d[k]);
+					const int* e = d.uuid.i;
+					if((uint16)e[0] != 0x2901)
+						continue;
+					char buf[d.len+1];
+					d.value = buf;
+					TEST_ZERO(maGattDescValue(&d));
+					buf[d.len] = 0;	// just to be safe.
+					printf("%s\n", buf);
+				}
 			}
 		}
 	}
