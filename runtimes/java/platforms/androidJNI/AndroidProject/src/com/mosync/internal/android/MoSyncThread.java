@@ -329,12 +329,6 @@ public class MoSyncThread extends Thread implements MoSyncContext
 
 	private String mUserLib = null;
 
-	// retains useful data for the BluetoothGatt.read* methods.
-	private Hashtable<BluetoothGattCharacteristic, Integer> mGattCharRead =
-		new Hashtable<BluetoothGattCharacteristic, Integer>();
-	private Hashtable<BluetoothGattDescriptor, Integer> mGattDescRead =
-		new Hashtable<BluetoothGattDescriptor, Integer>();
-
 	/**
 	 * MoSyncThread constructor
 	 */
@@ -5974,6 +5968,15 @@ public class MoSyncThread extends Thread implements MoSyncContext
 			ib.put(MAGattChar_len, c.getValue().length);
 			mGattCharRead.remove(c);
 			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_READ, status, ca});
+			while(mGattCharRead.size() >= 1) {
+				c = mGattCharRead.keys().nextElement();
+				ca = mGattCharRead.get(c).intValue();
+				boolean res = mGatt.get(mHandle).readCharacteristic(c);
+				if(res)
+					break;
+				else
+					postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_READ, -2, ca});
+			}
 		}
 		@Override
 		public void onDescriptorRead(BluetoothGatt g, BluetoothGattDescriptor d, int status) {
@@ -5983,6 +5986,15 @@ public class MoSyncThread extends Thread implements MoSyncContext
 			ib.put(MAGattDesc_len, d.getValue().length);
 			mGattDescRead.remove(d);
 			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_DESC_READ, status, da});
+			while(mGattDescRead.size() >= 1) {
+				d = mGattDescRead.keys().nextElement();
+				da = mGattDescRead.get(d).intValue();
+				boolean res = mGatt.get(mHandle).readDescriptor(d);
+				if(res)
+					break;
+				else
+					postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_DESC_READ, -2, da});
+			}
 		}
 		@Override
 		public void onCharacteristicWrite(BluetoothGatt g, BluetoothGattCharacteristic c, int status) {
@@ -6009,6 +6021,11 @@ public class MoSyncThread extends Thread implements MoSyncContext
 
 	int mNextGattHandle = 1;
 	HashMap<Integer, BluetoothGatt> mGatt = null;
+
+	private Hashtable<BluetoothGattCharacteristic, Integer> mGattCharRead =
+		new Hashtable<BluetoothGattCharacteristic, Integer>();
+	private Hashtable<BluetoothGattDescriptor, Integer> mGattDescRead =
+		new Hashtable<BluetoothGattDescriptor, Integer>();
 
 	int maGattConnect(int address) {
 		ByteBuffer a = getMemorySlice(address, 6);
@@ -6086,16 +6103,24 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		BluetoothGatt g = mGatt.get(ib.get(MAGattChar_device));
 		BluetoothGattCharacteristic c = getChar(g, ib);
 		mGattCharRead.put(c, new Integer(ca));
-		boolean res = g.readCharacteristic(c);
-		return res ? 1 : 0;
+		if(mGattCharRead.size() == 1) {
+			boolean res = g.readCharacteristic(c);
+			return res ? 1 : 0;
+		} else {
+			return 1;
+		}
 	}
 	int maGattFetchDescValue(int da) {
 		IntBuffer ib = getMemorySlice(da, _MAGattDesc_size).asIntBuffer();
 		BluetoothGatt g = mGatt.get(ib.get(MAGattDesc_device));
 		BluetoothGattDescriptor d = getDesc(g, ib);
 		mGattDescRead.put(d, new Integer(da));
-		boolean res = g.readDescriptor(d);
-		return res ? 1 : 0;
+		if(mGattDescRead.size() == 1) {
+			boolean res = g.readDescriptor(d);
+			return res ? 1 : 0;
+		} else {
+			return 1;
+		}
 	}
 
 	int maGattCharValue(int ca) {

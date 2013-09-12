@@ -279,7 +279,7 @@ end
 class MoSyncPackTask < FileTask
 	def initialize(options = {})
 		@o = options
-		p options
+		#p options
 		@o[:packpath] = @o[:buildpath] + @o[:model] if(!@o[:packpath])
 		@prerequisites = [@o[:program], DirTask.new(@o[:packpath])]
 		@prerequisites << @o[:resource] if(@o[:resource])
