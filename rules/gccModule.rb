@@ -22,7 +22,7 @@ def get_gcc_version_info(gcc)
 	end
 	if(!info[:ver])
 		puts gcc
-		error("Could not find gcc version.")
+		error("Could not find gcc version (#{gcc}).")
 	end
 	info[:string] = ''
 	info[:string] << 'arm-' if(info[:arm])

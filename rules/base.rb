@@ -1,6 +1,7 @@
 require "#{File.dirname(__FILE__)}/arg_handler.rb"
 
 Works.registerConstArg(:TASK_TEST_RUN, false)
+Works.registerConstArg(:DISABLE_THREADING, false)
 
 require "#{File.dirname(__FILE__)}/config.rb"
 require "#{File.dirname(__FILE__)}/util.rb"
@@ -11,8 +12,13 @@ require 'thread'
 # write seems safer.
 # update: not even write() was thread-safe. time for a mutex.
 module Kernel
+	alias_method(:orig_puts, :puts)
 	def puts(str)
-		Putser.puts(str)
+		if(defined?(DISABLE_THREADING) && DISABLE_THREADING)
+			orig_puts(str)
+		else
+			Putser.puts(str)
+		end
 	end
 end
 
@@ -21,6 +27,7 @@ class Putser
 	@@cond = ConditionVariable.new
 	@@stdoutLines = []
 	def self.puts(str)
+		raise if(defined?(DISABLE_THREADING) && DISABLE_THREADING)
 		tn = Works.threadName
 		if(!tn)
 			$stdout.write("#{str.strip}\n")
@@ -293,18 +300,52 @@ class Works
 		reset
 	end
 
+	def self.dumpTask(file, dumped, t)
+		if(dumped[t])
+			return
+		end
+		dumped[t] = true
+		file.puts "#{t.object_id} [label = \"#{t}\"];"
+		if(t.needies) then t.needies.each do |n|
+			file.puts "#{t.object_id} -> #{n.object_id};"
+			dumpTask(file, dumped, n)
+		end end
+		if(t.prerequisites) then t.prerequisites.each do |p|
+			file.puts "#{p.object_id} -> #{t.object_id} [style=dotted];"
+			dumpTask(file, dumped, p)
+		end end
+	end
+
+	def self.dumpTasks(tasks)
+		dumped = {}
+		open('tasks.dot', 'w') do |file|
+			file.puts 'digraph tasks {'
+			tasks.each do |t|
+				dumpTask(file, dumped, t)
+			end
+			file.puts '}'
+		end
+		sh "dot -Tpng -O tasks.dot"
+	end
+
 	def self.run2()
 		#puts "run2: #{@@tasks.inspect}"
 		return false if(@@error)
 		return false if(@@tasks.empty?)
 
+		#dumpTasks(@@tasks)
+
+		if(DISABLE_THREADING)
+			# A bug in stdout on OSX 10.6 causes build fail.
+			# Once Ruby reaches 2.0, it should be safe, but before then, I want to play it safe.
+			puts "DISABLE_THREADING"
+			runThread(1)
+		else
 		puts "starting multi-processing..."
 
 		threads = []
 		threadCount = number_of_processors
-		#if(@@tasks.size < threadCount)
-		#	threadCount = @@tasks.size
-		#end
+
 		for i in (1..threadCount) do
 			threads << Thread.new(i) do |i|
 				#puts "Start thread #{i}"
@@ -340,6 +381,8 @@ class Works
 		end
 
 		puts "multi-processing complete."
+		end
+
 		exit(1) if(@@error)
 		reset
 	end

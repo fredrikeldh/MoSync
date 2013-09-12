@@ -197,17 +197,17 @@ end
 
 # non-native only. don't modify; used by build system.
 def all_configs(target)
-	sh "ruby workfile.rb #{target}"
-	sh "ruby workfile.rb #{target} CONFIG=debug"
-	sh "ruby workfile.rb #{target} USE_NEWLIB="
-	sh "ruby workfile.rb #{target} USE_NEWLIB= CONFIG=debug"
+	Works.invoke_subdir('.', target)
+	Works.invoke_subdir('.', target, 'CONFIG=debug')
+	Works.invoke_subdir('.', target, 'USE_NEWLIB=')
+	Works.invoke_subdir('.', target, 'CONFIG=debug', 'USE_NEWLIB=')
 end
 
 def bb10_configs(target)
-	sh "ruby workfile.rb #{target} MODE=bb10 BB10_ARCH=arm"
-	sh "ruby workfile.rb #{target} MODE=bb10 BB10_ARCH=x86"
-	sh "ruby workfile.rb #{target} MODE=bb10 BB10_ARCH=arm CONFIG=debug"
-	sh "ruby workfile.rb #{target} MODE=bb10 BB10_ARCH=x86 CONFIG=debug"
+	Works.invoke_subdir('.', target, 'MODE=bb10', 'BB10_ARCH=arm')
+	Works.invoke_subdir('.', target, 'MODE=bb10', 'BB10_ARCH=x86')
+	Works.invoke_subdir('.', target, 'MODE=bb10', 'BB10_ARCH=arm', 'CONFIG=debug')
+	Works.invoke_subdir('.', target, 'MODE=bb10', 'BB10_ARCH=x86', 'CONFIG=debug')
 end
 
 target :all_configs do

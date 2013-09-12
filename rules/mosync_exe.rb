@@ -178,7 +178,7 @@ class MoSyncExe < ExeWork
 			default(:PACK_ANDROID_ALIAS, 'mosync.keystore')
 			default(:PACK_ANDROID_KEYPASS, 'default')
 
-			MoSyncPackTask.new(
+			MoSyncPackTask.new({
 				:tempdir => @BUILDDIR_BASE,
 				:buildpath => @BUILDDIR,
 				:model => @PACK_MODEL,
@@ -197,7 +197,7 @@ class MoSyncExe < ExeWork
 				:androidAlias => @PACK_ANDROID_ALIAS,
 				:androidKeypass => @PACK_ANDROID_KEYPASS,
 				:extraParameters => @PACK_PARAMETERS,
-			)
+			})
 		end
 	end
 	def targetName()
