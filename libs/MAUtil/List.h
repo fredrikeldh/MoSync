@@ -185,6 +185,14 @@ namespace MAUtil {
 		{
 		}
 
+		/// Destroys a list and removes all elements.
+		~List() {
+			ListIterator itr = this->begin();
+			while(itr.hasNext()) {
+				itr = this->remove(itr);
+			}
+		}
+
 		/**
 		* Adds an element to the beginning of the list.
 		*/
