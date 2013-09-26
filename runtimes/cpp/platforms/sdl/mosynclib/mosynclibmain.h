@@ -35,4 +35,4 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 typedef int (*mainfunc)();
 
-extern "C" int ATTRIBUTE(MOSYNC_API, mosyncLibMain(int argc, char** argv, mainfunc maMain));
+extern "C" int ATTRIBUTE(MOSYNC_API, mosyncLibMain(int argc, char** argv, mainfunc maMain, void (*resource_selector)()));

@@ -32,7 +32,7 @@ ResourceCompiler::VariantResourceLookup* resManager;
 extern "C" {
 #endif
 
-	int resource_selector() __attribute__((weak));
+	int resource_selector() GCCATTRIB(weak);
 
 #ifdef __cplusplus
 }	//extern "C"

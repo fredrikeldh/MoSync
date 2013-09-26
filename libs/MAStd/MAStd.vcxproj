@@ -11,20 +11,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ResCompiler\ByteArrayStream.h" />
+    <ClInclude Include="..\ResCompiler\rescomp.h" />
+    <ClInclude Include="..\ResCompiler\rescompdefines.h" />
+    <ClInclude Include="..\ResCompiler\ResCompiler.h" />
+    <ClInclude Include="..\ResCompiler\ResourceSetLookup.h" />
+    <ClInclude Include="..\ResCompiler\VariantResourceLookup.h" />
     <ClInclude Include="api_areas.h" />
     <ClInclude Include="conprint.h" />
-    <ClInclude Include="IX_AUDIOBUFFER.h" />
-    <ClInclude Include="IX_CALL.h" />
-    <ClInclude Include="IX_CELLID.h" />
-    <ClInclude Include="IX_GUIDO.h" />
-    <ClInclude Include="IX_OPENGL_ES.h" />
-    <ClInclude Include="IX_PIM.h" />
-    <ClInclude Include="IX_RECORD.h" />
-    <ClInclude Include="IX_RESOURCE_TYPES.h" />
-    <ClInclude Include="IX_SEGMENTED_DATA.h" />
-    <ClInclude Include="IX_STREAMING.h" />
-    <ClInclude Include="IX_WIDGET.h" />
-    <ClInclude Include="IX_WLAN.h" />
     <ClInclude Include="limits.h" />
     <ClInclude Include="ma.h" />
     <ClInclude Include="maapi.h" />
@@ -46,6 +40,10 @@
     <ClInclude Include="tlsf.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ResCompiler\ByteArrayStream.cpp" />
+    <ClCompile Include="..\ResCompiler\rescomp.cpp" />
+    <ClCompile Include="..\ResCompiler\ResourceSetLookup.cpp" />
+    <ClCompile Include="..\ResCompiler\VariantResourceLookup.cpp" />
     <ClCompile Include="conprint.c" />
     <ClCompile Include="ma.c" />
     <ClCompile Include="maassert.c" />
@@ -74,9 +72,6 @@
       <DisableSpecificWarnings Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4146</DisableSpecificWarnings>
     </ClCompile>
     <ClCompile Include="tlsf.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="crtlib.s" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EEED04C3-FD4A-47D1-B918-EDCBD5B122BE}</ProjectGuid>

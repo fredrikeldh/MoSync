@@ -8,7 +8,8 @@
 
 #include "ma.h"
 
-#ifndef MAPIP
+#if !defined(_MSC_VER)
+#if !defined(MAPIP)
 #include_next <wchar.h>
 #endif
 
@@ -87,5 +88,7 @@ int mblen(const char* string, size_t size);
 #ifdef __cplusplus
 }
 #endif
+
+#endif	// _MSC_VER
 
 #endif	//WHCAR_H

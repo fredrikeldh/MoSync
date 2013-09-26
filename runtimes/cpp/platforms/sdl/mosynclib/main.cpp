@@ -42,10 +42,11 @@ int main(int argc, const char** argv) {
 #else
 #ifdef _MSC_VER
 extern "C" int MAMain();
+extern "C" void resource_selector();
 int main(int argc, char** argv) {
 #else
 #include "mosynclibmain.h"
-extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
+extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain, void (*resource_selector)()) {
 #endif	//_MSC_VER
 #endif	//_USE_REBUILDER_
 
@@ -146,6 +147,7 @@ extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
 	// should be unreachable.
 	DEBIG_PHAT_ERROR;
 #else
+	resource_selector();
 	int i = MAMain();
 	LOG("MAMain() returned %i\n", i);
 	MoSyncExit(i);

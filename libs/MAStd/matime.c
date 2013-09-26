@@ -288,6 +288,11 @@ time_t mktime(struct tm *tim_p)
 
 #else	//MAPIP
 struct tm* split_time(time_t timer, struct tm* res) {
+#ifdef _MSC_VER
+	gmtime_s(res, &timer);
+	return res;
+#else
 	return gmtime_r(&timer, res);
+#endif
 }
 #endif	//MAPIP

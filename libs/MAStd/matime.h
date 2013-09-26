@@ -39,7 +39,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #else
 # ifndef _MSC_VER
 typedef long long time_t;
-# endif
 
 /// Components of a calendar date and time.
 struct tm
@@ -63,6 +62,8 @@ struct tm
 	///Daylight Saving Time flag. Ignored by MoSync functions.
 	int tm_isdst;
 };
+# endif
+
 #endif	//MOSYNC_NATIVE
 #endif	//_TIME_H
 

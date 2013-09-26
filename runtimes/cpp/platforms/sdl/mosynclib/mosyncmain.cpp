@@ -18,10 +18,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "mosynclibmain.h"
 
 extern "C" int MAMain();
+extern "C" void resource_selector();
 
 #undef main
 extern "C" int main(int argc, char** argv) __attribute__((visibility("default")));
 
 extern "C" int main(int argc, char** argv) {
-	return mosyncLibMain(argc, argv, MAMain);
+	return mosyncLibMain(argc, argv, MAMain, resource_selector);
 }

@@ -3,18 +3,6 @@
   <ItemGroup>
     <ClInclude Include="api_areas.h" />
     <ClInclude Include="conprint.h" />
-    <ClInclude Include="IX_AUDIOBUFFER.h" />
-    <ClInclude Include="IX_CALL.h" />
-    <ClInclude Include="IX_CELLID.h" />
-    <ClInclude Include="IX_GUIDO.h" />
-    <ClInclude Include="IX_OPENGL_ES.h" />
-    <ClInclude Include="IX_PIM.h" />
-    <ClInclude Include="IX_RECORD.h" />
-    <ClInclude Include="IX_RESOURCE_TYPES.h" />
-    <ClInclude Include="IX_SEGMENTED_DATA.h" />
-    <ClInclude Include="IX_STREAMING.h" />
-    <ClInclude Include="IX_WIDGET.h" />
-    <ClInclude Include="IX_WLAN.h" />
     <ClInclude Include="limits.h" />
     <ClInclude Include="ma.h" />
     <ClInclude Include="maapi.h" />
@@ -34,6 +22,24 @@
     <ClInclude Include="maxtoa.h" />
     <ClInclude Include="stdint.h" />
     <ClInclude Include="tlsf.h" />
+    <ClInclude Include="..\ResCompiler\ByteArrayStream.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ResCompiler\ResourceSetLookup.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ResCompiler\rescomp.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ResCompiler\rescompdefines.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ResCompiler\ResCompiler.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ResCompiler\VariantResourceLookup.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="conprint.c" />
@@ -55,8 +61,22 @@
     <ClCompile Include="strtoul.c" />
     <ClCompile Include="strtoull.c" />
     <ClCompile Include="tlsf.c" />
+    <ClCompile Include="..\ResCompiler\ByteArrayStream.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ResCompiler\rescomp.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ResCompiler\ResourceSetLookup.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ResCompiler\VariantResourceLookup.cpp">
+      <Filter>Resources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="crtlib.s" />
+    <Filter Include="Resources">
+      <UniqueIdentifier>{3436a2e7-5015-46b7-ae05-ddf9f8013f2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

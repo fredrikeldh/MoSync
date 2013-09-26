@@ -123,7 +123,6 @@
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="GraphicsOpenGL.h" />
     <ClInclude Include="GraphicsSoftware.h" />
-    <ClInclude Include="PlaceholderPool.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
@@ -154,7 +153,6 @@
     <ClCompile Include="Graphics.c" />
     <ClCompile Include="GraphicsOpenGL.c" />
     <ClCompile Include="GraphicsSoftware.c" />
-    <ClCompile Include="PlaceholderPool.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
