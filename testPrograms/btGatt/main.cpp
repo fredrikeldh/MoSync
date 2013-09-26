@@ -22,6 +22,7 @@ public:
 	MyMoblet()
 	{
 		mConnected = false;
+		mDevice = 0;
 #if 1
 		//Calculate the font size
 		MAExtent ex = maGetScrSize();
@@ -43,7 +44,7 @@ public:
 		// no need to do this; all moblets are already custom listeners by default.
 		//addCustomEventListener(this);
 
-#if 1
+#if 0
 		//static const MABtAddr sDeviceAddress = {{0xBC,0x6A,0x29,0xAC,0x16,0xE6}};
 		static const MABtAddr sDeviceAddress = {{0xBC,0x6A,0x29,0xAB,0x39,0x69}};
 #define DEVICE_ADDRESS sDeviceAddress
@@ -71,7 +72,9 @@ public:
 		printf("Device found: %02X:%02X:%02X:%02X:%02X:%02X %s\n",
 			a[0], a[1], a[2], a[3], a[4], a[5],
 			dev.name.c_str());
-#if 0
+#if 1
+		if(mDevice != 0)
+			return;
 		int res = mBtDisc.cancel();
 		if(res < 0) {
 			printf("cancel failed: %i\n", res);
@@ -80,7 +83,7 @@ public:
 		printf("Connecting...\n");
 		mDevice = maGattConnect(&dev.address);
 		printf("maGattConnect: %i\n", mDevice);
-		if(mHandle < 0) {
+		if(mDevice < 0) {
 			printf("maGattConnect failed: %i\n", mDevice);
 		}
 #endif
