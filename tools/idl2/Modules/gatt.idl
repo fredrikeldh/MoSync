@@ -131,6 +131,9 @@ int maGattDescValue(out MAGattDesc d);
 // to update value, call Fetch*, then call *Value again.
 
 // async.
+// requires device, serviceIndex, charIndex, value and len (and descIndex).
+// musn't read and write the same object at the same time; results are undefined.
+// c/d must remain valid until op finish. do not use local variables!
 // returns 1 on write start, 0 otherwise.
 int maGattCharWrite(in MAGattChar c);
 int maGattDescWrite(in MAGattDesc d);

@@ -1254,9 +1254,9 @@ public class MoSyncThread extends Thread implements MoSyncContext
 
 		// Restore clip state and save before setting the clip rect.
 		// Note that we do an initial save of the clip state in initSyscalls.
-		Log.i("mCanvas", "restore maSetClipRect");
+		//Log.i("mCanvas", "restore maSetClipRect");
 		mCanvas.restore();
-		Log.i("mCanvas", "save maSetClipRect");
+		//Log.i("mCanvas", "save maSetClipRect");
 		mCanvas.save();
 		mCanvas.clipRect(left, top, left+width, top+height, Region.Op.REPLACE);
 	}
@@ -5998,15 +5998,41 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		}
 		@Override
 		public void onCharacteristicWrite(BluetoothGatt g, BluetoothGattCharacteristic c, int status) {
-			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_WRITE, status});
+			int ca = mGattCharWrite.get(c).intValue();
+			mGattCharWrite.remove(c);
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_WRITE, status, ca});
+			while(mGattCharWrite.size() >= 1) {
+				c = mGattCharWrite.keys().nextElement();
+				ca = mGattCharWrite.get(c).intValue();
+				boolean res = mGatt.get(mHandle).writeCharacteristic(c);
+				if(res)
+					break;
+				else
+					postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_WRITE, -2, ca});
+			}
 		}
 		@Override
 		public void onDescriptorWrite(BluetoothGatt g, BluetoothGattDescriptor d, int status) {
-			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_DESC_WRITE, status});
+			int da = mGattDescWrite.get(d).intValue();
+			mGattDescWrite.remove(d);
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_DESC_WRITE, status, da});
+			while(mGattDescWrite.size() >= 1) {
+				d = mGattDescWrite.keys().nextElement();
+				da = mGattDescWrite.get(d).intValue();
+				boolean res = mGatt.get(mHandle).writeDescriptor(d);
+				if(res)
+					break;
+				else
+					postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_DESC_WRITE, -2, da});
+			}
 		}
 		@Override
 		public void onCharacteristicChanged(BluetoothGatt g, BluetoothGattCharacteristic c) {
-			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_CHANGED});
+			// write MAGattChar_len
+			int ca = mGattCharNotify.get(c).intValue();
+			IntBuffer ib = getMemorySlice(ca, _MAGattChar_size).asIntBuffer();
+			ib.put(MAGattChar_len, c.getValue().length);
+			postEvent(new int[] {EVENT_TYPE_GATT, mHandle, MAGATT_EVENT_CHAR_CHANGED, 0, ca});
 		}
 	};
 
@@ -6025,6 +6051,12 @@ public class MoSyncThread extends Thread implements MoSyncContext
 	private Hashtable<BluetoothGattCharacteristic, Integer> mGattCharRead =
 		new Hashtable<BluetoothGattCharacteristic, Integer>();
 	private Hashtable<BluetoothGattDescriptor, Integer> mGattDescRead =
+		new Hashtable<BluetoothGattDescriptor, Integer>();
+	private Hashtable<BluetoothGattCharacteristic, Integer> mGattCharNotify =
+		new Hashtable<BluetoothGattCharacteristic, Integer>();
+	private Hashtable<BluetoothGattCharacteristic, Integer> mGattCharWrite =
+		new Hashtable<BluetoothGattCharacteristic, Integer>();
+	private Hashtable<BluetoothGattDescriptor, Integer> mGattDescWrite =
 		new Hashtable<BluetoothGattDescriptor, Integer>();
 
 	int maGattConnect(int address) {
@@ -6143,24 +6175,38 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		BluetoothGatt g = mGatt.get(ib.get(MAGattChar_device));
 		BluetoothGattCharacteristic c = getChar(g, ib);
 		ByteBuffer bb = getMemorySlice(ib.get(MAGattChar_value), ib.get(MAGattChar_len));
-		boolean res = c.setValue(bb.array());
+		byte[] val = new byte[bb.remaining()];
+		bb.get(val);
+		boolean res = c.setValue(val);
 		if(!res) {
 			return MAGATT_ERR_VALUE_NOT_ACCEPTED;
 		}
-		res = g.writeCharacteristic(c);
-		return res ? 1 : 0;
+		mGattCharWrite.put(c, new Integer(ca));
+		if(mGattCharWrite.size() == 1) {
+			res = g.writeCharacteristic(c);
+			return res ? 1 : 0;
+		} else {
+			return 1;
+		}
 	}
 	int maGattDescWrite(int da) {
 		IntBuffer ib = getMemorySlice(da, _MAGattDesc_size).asIntBuffer();
 		BluetoothGatt g = mGatt.get(ib.get(MAGattDesc_device));
 		BluetoothGattDescriptor d = getDesc(g, ib);
 		ByteBuffer bb = getMemorySlice(ib.get(MAGattDesc_value), ib.get(MAGattDesc_len));
-		boolean res = d.setValue(bb.array());
+		byte[] val = new byte[bb.remaining()];
+		bb.get(val);
+		boolean res = d.setValue(val);
 		if(!res) {
 			return MAGATT_ERR_VALUE_NOT_ACCEPTED;
 		}
-		res = g.writeDescriptor(d);
-		return res ? 1 : 0;
+		mGattDescWrite.put(d, new Integer(da));
+		if(mGattDescWrite.size() == 1) {
+			res = g.writeDescriptor(d);
+			return res ? 1 : 0;
+		} else {
+			return 1;
+		}
 	}
 
 	int maGattNotification(int ca, int enable) {
@@ -6168,6 +6214,11 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		BluetoothGatt g = mGatt.get(ib.get(MAGattChar_device));
 		BluetoothGattCharacteristic c = getChar(mGatt.get(ib.get(MAGattChar_device)), ib);
 		boolean res = g.setCharacteristicNotification(c, enable == 0 ? false : true);
+		if(res && enable != 0) {
+			mGattCharNotify.put(c, new Integer(ca));
+		} else {
+			mGattCharRead.remove(c);
+		}
 		return res ? 1 : 0;
 	}
 }
