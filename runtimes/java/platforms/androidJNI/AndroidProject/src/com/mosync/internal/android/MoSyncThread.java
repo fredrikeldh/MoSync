@@ -6217,7 +6217,7 @@ public class MoSyncThread extends Thread implements MoSyncContext
 		if(res && enable != 0) {
 			mGattCharNotify.put(c, new Integer(ca));
 		} else {
-			mGattCharRead.remove(c);
+			mGattCharNotify.remove(c);
 		}
 		return res ? 1 : 0;
 	}

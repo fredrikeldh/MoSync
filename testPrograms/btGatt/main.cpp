@@ -166,7 +166,7 @@ public:
 			s.charCount = -1;
 			TEST_ZERO(maGattService(&s));
 			const int* a = s.uuid.i;
-			printf("s%2i: i%i c%i %08X%08X%08X%08X\n", i, s.inclCount, s.charCount, a[0], a[1], a[2], a[3]);
+			printf("s%2i: 0x%x i%i c%i %08X%08X%08X%08X\n", i, s.id, s.inclCount, s.charCount, a[0], a[1], a[2], a[3]);
 
 			// do characteristics.
 
@@ -181,7 +181,7 @@ public:
 				c.charIndex = j;
 				TEST_ZERO(maGattChar(&c));
 				const int* b = c.uuid.i;
-				printf("c%2i: d%i %08X%08X%08X%08X\n", j, c.descCount, b[0], b[1], b[2], b[3]);
+				printf("c%2i: 0x%x d%i %08X%08X%08X%08X\n", j, c.id, c.descCount, b[0], b[1], b[2], b[3]);
 				// do descriptors.
 				mc.d.resize(c.descCount);
 				for(int k=0; k<c.descCount; k++) {

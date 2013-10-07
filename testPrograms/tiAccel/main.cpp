@@ -20,6 +20,8 @@ static const MAUUID sAccelDataUUID = {{0xF000AA11, 0x04514000, 0xB0000000, 0x000
 static const MAUUID sAccelConfUUID = {{0xF000AA12, 0x04514000, 0xB0000000, 0x00000000}};
 static const MAUUID sAccelPeriodUUID = {{0xF000AA13, 0x04514000, 0xB0000000, 0x00000000}};
 
+static const MAUUID sClientCharConfigUUID = {{0x00002902, 0x00001000, 0x80000080, 0x5F9B34FB}};
+
 class MyMoblet : public Moblet, BluetoothDeviceDiscoveryListener, TimerListener
 {
 public:
@@ -120,6 +122,7 @@ public:
 	MyGattChar* mAccelDataChar;
 	MyGattChar* mAccelConfChar;
 	MyGattChar* mAccelPeriodChar;
+	MAGattDesc* mAccelNotificationDesc;
 
 	void customEvent(const MAEvent& event) {
 		if(event.type != EVENT_TYPE_GATT)
@@ -158,15 +161,30 @@ public:
 			if(mCharWriteCount == 2)
 			{
 #if 0
-				TEST_ONE(maGattNotification(&mAccelDataChar->c, 1));
 				// should cause a stream of MAGATT_EVENT_CHAR_CHANGED events.
 				// can call maGattCharValue() after each one.
+				TEST_ONE(maGattNotification(&mAccelDataChar->c, 1));
 				printf("Notification requested.\n");
-#else
+#elif 0
 				TEST_ONE(maGattFetchCharValue(&mAccelDataChar->c));
 				addTimer(this, 100, 0);
+#else
+				// request notifications
+				{
+					static char noteBytes[] = {0x01,0x00};
+					MAGattDesc& d(*mAccelNotificationDesc);
+					d.value = noteBytes;
+					d.len = sizeof(noteBytes);
+					TEST_ONE(maGattDescWrite(&d));
+				}
+				// maybe this will work.
+				TEST_ONE(maGattNotification(&mAccelDataChar->c, 1));
+				printf("dNotification requested.\n");
 #endif
 			}
+			break;
+		case MAGATT_EVENT_DESC_WRITE:
+			printf("DescWrite %i\n", event.gatt.status);
 			break;
 		case MAGATT_EVENT_CHAR_READ:
 			{
@@ -176,13 +194,27 @@ public:
 				c->value = v;
 				TEST_ZERO(maGattCharValue(c));
 				printf("CharRead %i %02x %02x %02x\n", event.gatt.status, v[0], v[1], v[2]);
+				// maybe this will work.
+#if 0
+				TEST_ONE(maGattNotification(&mAccelDataChar->c, 1));
+				printf("Notification requested.\n");
+#endif
 			}
 			break;
-		case MAGATT_EVENT_CHAR_CHANGED:
+			case MAGATT_EVENT_CHAR_CHANGED:
 			{
 				MAGattChar* c = (MAGattChar*)event.gatt.data;
 				mCharChangedCount++;
-				printf("CharChanged %i %i %i\n", event.gatt.status, c->len, mCharChangedCount);
+				if(c == &mAccelDataChar->c) {
+					// print accelerometer data
+					MAASSERT(c->len == 3);
+					char v[3];
+					c->value = v;
+					TEST_ZERO(maGattCharValue(c));
+					printf("%02x %02x %02x\n", v[0], v[1], v[2]);
+				} else {
+					printf("CharChanged %i %i %i\n", event.gatt.status, c->len, mCharChangedCount);
+				}
 			}
 			break;
 		default:
@@ -221,6 +253,7 @@ public:
 			// its value should be an UTF-8 string describing the service.
 			ms.c.resize(s.charCount);
 			for(int j=0; j<s.charCount; j++) {
+				bool isAccelDataChar = false;
 				MyGattChar& mc(ms.c[j]);
 				MAGattChar& c(mc.c);
 				c.device = mDevice;
@@ -232,6 +265,7 @@ public:
 				if(!memcmp(&c.uuid, &sAccelDataUUID, sizeof(MAUUID))) {
 					mAccelDataChar = &mc;
 					printf("AccelDataChar found.\n");
+					isAccelDataChar = true;
 				}
 				if(!memcmp(&c.uuid, &sAccelConfUUID, sizeof(MAUUID))) {
 					mAccelConfChar = &mc;
@@ -253,6 +287,10 @@ public:
 					//const int* e = d.uuid.i;
 					//printf("d%2i: %08X%08X%08X%08X\n", k, e[0], e[1], e[2], e[3]);
 
+					if(isAccelDataChar and !memcmp(&d.uuid, &sClientCharConfigUUID, sizeof(MAUUID))) {
+						mAccelNotificationDesc = &d;
+						printf("AccelNoteDesc found.\n");
+					}
 #if 0
 					if((uint16)e[0] == 0x2901) {
 						TEST_ONE(maGattFetchDescValue(&d));
@@ -270,7 +308,7 @@ public:
 
 	void startAccelerometer() {
 		// set period
-		if(1)	// todo: enable
+		if(1)
 		{
 			static char period = 10;	// in centiseconds.
 			MAGattChar& c(mAccelPeriodChar->c);
@@ -288,7 +326,6 @@ public:
 			TEST_ONE(maGattCharWrite(&c));
 			// we should get a MAGATT_EVENT_CHAR_WRITE soon.
 		}
-		// request notification once the writes are complete.
 	}
 
 	void keyPressEvent(int keyCode, int nativeCode)

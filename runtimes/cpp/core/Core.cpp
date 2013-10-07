@@ -1170,7 +1170,7 @@ void WRITE_REG(int reg, int value) {
 #else
 #define dumpJump(a)
 #endif
-#define JMP_GENERIC(address) dumpJump(address); if(uint(address) >= CODE_SEGMENT_SIZE) {\
+#define JMP_GENERIC(address) dumpJump(address); if(uint(address) >= CODE_SEGMENT_SIZE || (address) <= 0) {\
 	LOG("\nIllegal jump to 0x%04X\n", (uint)address); BIG_PHAT_ERROR(ERR_IMEM_OOB); }\
 		ip = (byte*)(mem_cs + (address));
 #else
@@ -1241,8 +1241,8 @@ void WRITE_REG(int reg, int value) {
 			((address & (sizeof(T) - 1)) != 0) || //alignment check
 			(address < 4))	//NULL pointer check
 		{
-			LOG("Memory reference validation failed. Size %" PFZT ", address 0x%x\n",
-				sizeof(T), address);
+			LOG("Memory reference validation failed. Size %" PFZT ", address 0x%x, ip: 0x%x\n",
+				sizeof(T), address, GetIp());
 			if((address & (sizeof(T) - 1)) != 0) {
 				BIG_PHAT_ERROR(ERR_MEMORY_ALIGNMENT);
 			} else if(address >= DATA_SEGMENT_SIZE || (address+sizeof(T)) > DATA_SEGMENT_SIZE) {
