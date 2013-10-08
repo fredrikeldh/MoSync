@@ -326,6 +326,7 @@ public:
 			TEST_ONE(maGattCharWrite(&c));
 			// we should get a MAGATT_EVENT_CHAR_WRITE soon.
 		}
+		// write to descriptor once char writes are complete.
 	}
 
 	void keyPressEvent(int keyCode, int nativeCode)
