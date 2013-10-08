@@ -1,44 +1,10 @@
-/*
-Copyright (C) 2011 MoSync AB
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License,
-version 2, as published by the Free Software Foundation.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-MA 02110-1301, USA.
-*/
-
-/** \file main.cpp
-*
-* This example shows how to retrieve accelerometer data and
-* use it in a meaningful manner (rotate 3d objects).
-* The 3d rendering is in a seperate module so if you dare
-* you can try and plug in your own 3d renderer and see
-* how your 3d world looks from different angles using
-* the accelerometer. To do this you just implement the
-* Renderer interface and the two functions 'init' and
-* 'render'. Look at the default renderer implementation
-* called SimpleRenderer to see how it is done.
-*
-* \author Niklas Nummelin
-*
-*/
-
-#include <MAUtil/GLMoblet.h>
+#include <MAUtil/Moblet.h>
 #include <madmath.h>
-#include "SimpleRenderer.h"
 #include <MAUtil/BluetoothDiscovery.h>
 #include <MAUtil/Vector.h>
 #include <ma.h>
 #include <maheap.h>
+#include <mavsprintf.h>
 
 using namespace MAUtil;
 
@@ -54,71 +20,67 @@ static const MAUUID sAccelPeriodUUID = {{0xF000AA13, 0x04514000, 0xB0000000, 0x0
 
 static const MAUUID sClientCharConfigUUID = {{0x00002902, 0x00001000, 0x80000080, 0x5F9B34FB}};
 
-// A simple struct that represents
-// a vector in 3-dimensional space.
-struct Vector3 {
-	Vector3() :
-		x(0.0), y(0.0), z(0.0)
-	{
-	}
-	Vector3(float _x, float _y, float _z) :
-		x(_x), y(_y), z(_z)
-	{
-	}
-
-	float x, y, z;
-};
-
-// A simple low pass filter used to
-// smoothen the noisy accelerometer
-// data.
-struct LowPassFilter {
-	LowPassFilter() :
-		// this constant sets the cutoff for the filter.
-		// It must be a value between 0 and 1, where
-		// 0 means no filtering (everything is passed through)
-		// and 1 that no signal is passed through.
-		a(0.80f)
-	{
-		b = 1.0f - a;
-	}
-
-	Vector3 filter(const Vector3& in) {
-		previousState.x = (in.x * b) + (previousState.x * a);
-		previousState.y = (in.y * b) + (previousState.y * a);
-		previousState.z = (in.z * b) + (previousState.z * a);
-		return previousState;
-	}
-
-	float a, b;
-	Vector3 previousState;
-};
-
 /**
  * A Moblet is a high-level class that defines the
  * behaviour of a MoSync program.
  */
-class MyMoblet: public GLMoblet, public BluetoothDeviceDiscoveryListener {
+class MyMoblet: public Moblet, public BluetoothDeviceDiscoveryListener {
 private:
-	Renderer* mRenderer;
-	LowPassFilter mFilter;
-	Vector3 mRotation;
 
 	BluetoothDiscoverer mBtDisc;
 	MAHandle mDevice;
 	bool mConnected;
 
 public:
-	/**
-	 * Initialize the application in the constructor.
-	 */
-	MyMoblet() :
-		GLMoblet(GLMoblet::GL1) {
+	void clearTop() {
+		maSetColor(0);
+		maFillRect(0,0,300,50);
+	}
 
+	void drawText(const char* text) {
+		clearTop();
+		maSetColor(0xffffffff);
+		maDrawText(0,0, text);
+		maUpdateScreen();
+	}
+
+	MyMoblet() {
+#if 1
+		//Calculate the font size
+		MAExtent ex = maGetScrSize();
+		//int screenWidth = EXTENT_X(ex);
+		int screenHeight = EXTENT_Y(ex);
+		int fontSize = screenHeight / 40;
+
+		//Here we load a default font, which is used for the first collumn
+		MAHandle mDefaultFont = maFontLoadDefault(FONT_TYPE_MONOSPACE, 0, fontSize);
+
+		//Check if it's implemented on the current platform
+		if(-1 == mDefaultFont)
+		{
+			maPanic(0, "Device fonts is only available on Android, iOS and WP7.");
+		}
+		maFontSetCurrent(mDefaultFont);
+#endif
+		drawText("Discovering...");
+#if 1
+		//static const MABtAddr sDeviceAddress = {{0xBC,0x6A,0x29,0xAC,0x16,0xE6}};
+		static const MABtAddr sDeviceAddress = {{0xBC,0x6A,0x29,0xAB,0x39,0x69}};
+#define DEVICE_ADDRESS sDeviceAddress
+#endif
+
+#ifdef DEVICE_ADDRESS
+		mDevice = maGattConnect(&DEVICE_ADDRESS);
+		if(mDevice < 0) {
+			maPanic(1, "maGattConnect failed");
+		}
+		drawText("Connecting...");
+#else
 		int res = mBtDisc.startDeviceDiscovery(this, true, MA_BTDD_LOW_ENERGY);
 		if(res < 0) {
 			maPanic(1, "Discovery failed to start!");
 		}
+#endif
 	}
 
 	void btNewDevice(const BtDevice& dev) {
@@ -134,6 +96,7 @@ public:
 		if(mDevice < 0) {
 			maPanic(1, "maGattConnect failed");
 		}
+		drawText("Connecting...");
 	}
 
 	void btDeviceDiscoveryFinished(int state) {
@@ -181,6 +144,7 @@ public:
 			mAccelDataChar = mAccelConfChar = mAccelPeriodChar = NULL;
 			mCharChangedCount = 0;
 			mCharWriteCount = 0;
+			drawText("Connected...");
 			break;
 		case MAGATT_EVENT_SERVICES:
 			//printf("services: %i\n", event.gatt.status);
@@ -305,7 +269,7 @@ public:
 				}
 			}
 		}
-		MAASSERT(mAccelDataChar && mAccelConfChar && mAccelPeriodChar);
+		MAASSERT(mAccelDataChar && mAccelConfChar && mAccelPeriodChar && mAccelNotificationDesc);
 
 		startAccelerometer();
 	}
@@ -343,49 +307,56 @@ public:
 		}
 	}
 
-	void init() {
-		// Make an instance of the SimpleRenderer class that just
-		// renders a simple finite plane (quad).
-		mRenderer = new SimpleRenderer();
-		mRenderer->init(EXTENT_X(maGetScrSize()), EXTENT_Y(maGetScrSize()));
-	}
+	struct SP {
+		char v[3];
+	};
 
-	// Function that uses trigonometric math to convert accelerometer and compass
-	// data into euler angles expressed as radians. This simple method won't always
-	// give correct results (complex complex math may fix that for you).
-	Vector3 convertAccelerometerAndCompassDataToRadians(const Vector3& a, float compass) {
-		float g = sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
-		return Vector3(atan2(a.y, -a.z), asin(a.x / -g), compass);
-	}
-
-	// Convert euler angles from radians to degrees.
-	float convertRadiansToDegrees(float radians) {
-		return (radians * 360.0f / (2.0f * M_PI));
-	}
+	Vector<SP> mSP;
 
 	void sensorEvent(char* v) {
-		float f[3];
-		for(int i=0; i<3; i++) {
-			f[i] = ((float)(signed char)v[i]) / 64;
+		// add new data.
+		SP sp;
+		memcpy(sp.v, v, 3);
+		mSP.add(sp);
+
+		// draw background.
+		MAExtent ss = maGetScrSize();
+		int w = EXTENT_X(ss);
+		int h = EXTENT_Y(ss);
+		maSetColor(0);
+		maFillRect(0,0,w,h);
+
+		{
+			static int sCount = 0;
+			char buf[32];
+			sCount++;
+			sprintf(buf, "%i", sCount);
+			maSetColor(0xffffffff);
+			maDrawText(0,0, buf);
 		}
 
-		// Filter the accelerometer gravity vector.
-		Vector3 vf = mFilter.filter(Vector3(f[0], f[1], f[2]));
-
-		// And calculate the rotations. We don't pass the compass angle, just the
-		// accelerometer gravity vector.
-		mRotation = convertAccelerometerAndCompassDataToRadians(vf, 0.0f);
-
-		// Set the rotation.
-		mRenderer->setRotation(
-			convertRadiansToDegrees(mRotation.x),
-			convertRadiansToDegrees(mRotation.y),
-			convertRadiansToDegrees(mRotation.z)
-			);
-	}
-
-	void draw() {
-		mRenderer->draw();
+		// draw graph.
+		static const int colors[] = {
+			0xffff0000,	// red
+			0xff00ff00,	// green
+			0xff0000ff,	// blue
+		};
+		for(int j=0; j<3; j++) {
+			int y;
+			maSetColor(colors[j]);
+			for(int i=mSP.size()-1; i>0; i--) {
+				int newY = ((((int)(signed char)mSP[i].v[j]) * h) / 256) + h/2;
+				if(i < mSP.size()-1) {
+					maLine(w-i*2-2, y, w-i*2, newY);
+				}
+				y = newY;
+			}
+		}
+		// todo: if we have performance problems, turn the array into a circular fifo.
+		while(mSP.size() > w/2) {
+			mSP.remove(0);
+		}
+		maUpdateScreen();
 	}
 };
 
